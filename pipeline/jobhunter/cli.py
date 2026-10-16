@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import sys
 import tomllib
 from pathlib import Path
 
@@ -8,36 +9,26 @@ from . import db
 from .harvest import harvest
 from .sources import SOURCE_NAMES, build_source
 
+DISCOVERY = ["remotive", "remoteok", "hackernews"]
+BOARDS = ["greenhouse", "lever", "ashby"]
 
-def main() -> None:
-    parser = argparse.ArgumentParser(prog="jobhunter")
-    sub = parser.add_subparsers(dest="cmd", required=True)
 
-    scrape = sub.add_parser("scrape", help="Run a source and store jobs")
-    scrape.add_argument("source", choices=SOURCE_NAMES)
-    scrape.add_argument("--dry-run", action="store_true", help="Fetch only, no DB writes")
+def load_config() -> dict:
+    return tomllib.loads((Path(__file__).resolve().parents[1] / "sources.toml").read_text())
 
-    sub.add_parser("harvest", help="Find ATS board slugs in stored jobs and save them")
 
-    args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+def run_source(name: str, config: dict, dry_run: bool = False) -> str:
+    # Built here, not earlier, so board sources see slugs harvested moments ago
+    source = build_source(name, config)
 
-    if args.cmd == "harvest":
-        with db.connect() as conn:
-            added = harvest(conn)
-        print("new companies:", added)
-        return
-
-    config = tomllib.loads((Path(__file__).resolve().parents[1] / "sources.toml").read_text())
-    source = build_source(args.source, config)
-
-    if args.dry_run:
+    if dry_run:
         jobs = asyncio.run(source.fetch())
-        print(f"{len(jobs)} jobs fetched (dry run)")
-        for j in jobs[:5]:
-            print(f"- {j.company_name} | {j.title} | {j.location} | {j.remote_type}")
-        return
+        lines = [f"{len(jobs)} jobs fetched (dry run)"]
+        lines += [
+            f"- {j.company_name} | {j.title} | {j.location} | {j.remote_type}"
+            for j in jobs[:5]
+        ]
+        return "\n".join(lines)
 
     with db.connect() as conn:
         run_id = db.start_run(conn, source.name)
@@ -47,7 +38,60 @@ def main() -> None:
             seen, new = db.upsert_jobs(conn, jobs)
             closed = db.close_stale(conn, source.name, jobs, started)
             db.finish_run(conn, run_id, seen, new, None)
-            print(f"{source.name}: {seen} seen, {new} new, {closed} closed")
+            return f"{source.name}: {seen} seen, {new} new, {closed} closed"
         except Exception as e:
             db.finish_run(conn, run_id, 0, 0, str(e))
             raise
+
+
+def run_harvest() -> str:
+    with db.connect() as conn:
+        added = harvest(conn)
+    return f"harvest: new companies {added}"
+
+
+def run_all(config: dict, skip: set[str]) -> int:
+    steps: list[tuple[str, object]] = []
+    steps += [(s, lambda s=s: run_source(s, config)) for s in DISCOVERY if s not in skip]
+    steps.append(("harvest", run_harvest))
+    steps += [(s, lambda s=s: run_source(s, config)) for s in BOARDS if s not in skip]
+    steps.append(("harvest", run_harvest))  # picks up slugs for the next run
+
+    summary: list[str] = []
+    failed = 0
+    for name, step in steps:
+        try:
+            summary.append(step())
+        except Exception as e:  # one bad source must not stop the rest
+            failed += 1
+            summary.append(f"{name}: FAILED ({e!r})")
+            logging.exception("%s failed", name)
+
+    print("\n=== summary ===")
+    print("\n".join(summary))
+    return 1 if failed else 0
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="jobhunter")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    scrape = sub.add_parser("scrape", help="Run one source and store jobs")
+    scrape.add_argument("source", choices=SOURCE_NAMES)
+    scrape.add_argument("--dry-run", action="store_true", help="Fetch only, no DB writes")
+
+    sub.add_parser("harvest", help="Find ATS board slugs in stored jobs and save them")
+
+    everything = sub.add_parser("all", help="Run every source, harvest, then the boards")
+    everything.add_argument("--skip", nargs="*", default=[], choices=SOURCE_NAMES)
+
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    if args.cmd == "harvest":
+        print(run_harvest())
+    elif args.cmd == "all":
+        sys.exit(run_all(load_config(), set(args.skip)))
+    else:
+        print(run_source(args.source, load_config(), args.dry_run))
