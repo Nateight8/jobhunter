@@ -42,10 +42,12 @@ def main() -> None:
     with db.connect() as conn:
         run_id = db.start_run(conn, source.name)
         try:
+            started = db.db_now(conn)
             jobs = asyncio.run(source.fetch())
             seen, new = db.upsert_jobs(conn, jobs)
+            closed = db.close_stale(conn, source.name, jobs, started)
             db.finish_run(conn, run_id, seen, new, None)
-            print(f"{source.name}: {seen} seen, {new} new")
+            print(f"{source.name}: {seen} seen, {new} new, {closed} closed")
         except Exception as e:
             db.finish_run(conn, run_id, 0, 0, str(e))
             raise

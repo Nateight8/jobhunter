@@ -77,3 +77,47 @@ def ats_slugs(conn: psycopg.Connection, ats_type: str) -> list[str]:
         (ats_type,),
     ).fetchall()
     return [r[0] for r in rows]
+
+
+BOARD_SOURCES = {"greenhouse", "lever", "ashby"}
+
+
+def db_now(conn: psycopg.Connection):
+    return conn.execute("SELECT now()").fetchone()[0]
+
+
+def close_stale(
+    conn: psycopg.Connection, source: str, jobs: list[RawJob], run_started
+) -> int:
+    """Mark jobs not seen in this run as closed, only for feeds that responded.
+
+    Board sources are handled per board, so a failed or empty fetch for one
+    board never closes that board's jobs. Single-feed sources only close
+    when the feed returned at least one job.
+    """
+    if not jobs:
+        return 0
+    closed = 0
+    with conn.cursor() as cur:
+        if source in BOARD_SOURCES:
+            boards = {j.source_id.split(":")[0] for j in jobs}
+            for board in boards:
+                cur.execute(
+                    """
+                    UPDATE jobs SET closed_at = now()
+                    WHERE source = %s AND split_part(source_id, ':', 1) = %s
+                      AND closed_at IS NULL AND last_seen_at < %s
+                    """,
+                    (source, board, run_started),
+                )
+                closed += cur.rowcount
+        else:
+            cur.execute(
+                """
+                UPDATE jobs SET closed_at = now()
+                WHERE source = %s AND closed_at IS NULL AND last_seen_at < %s
+                """,
+                (source, run_started),
+            )
+            closed += cur.rowcount
+    return closed
