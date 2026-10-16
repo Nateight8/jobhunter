@@ -4,3 +4,11 @@ slugs = ["stripe", "gitlab", "vercel", "cloudflare", "datadog", "anthropic", "fi
 
 [remotive]
 categories = ["software-dev"]
+
+# Bootstrap slugs only. These are guesses; wrong ones are skipped with a warning.
+# Later the harvester fills these from the companies table instead.
+[lever]
+slugs = ["plaid", "mistral", "palantir"]
+
+[ashby]
+slugs = ["linear", "ramp", "openai"]

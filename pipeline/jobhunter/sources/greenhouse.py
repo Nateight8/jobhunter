@@ -32,7 +32,7 @@ class GreenhouseSource(Source):
     async def fetch(self) -> list[RawJob]:
         sem = asyncio.Semaphore(self.concurrency)
         headers = {"User-Agent": "jobhunter/0.1 (open-source job aggregator)"}
-        async with httpx.AsyncClient(timeout=30, headers=headers) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=10), headers=headers) as client:
             boards = await asyncio.gather(
                 *(self._board(client, sem, slug) for slug in self.slugs)
             )
@@ -43,6 +43,7 @@ class GreenhouseSource(Source):
     ) -> list[RawJob]:
         async with sem:
             try:
+              async with asyncio.timeout(60):
                 resp = await client.get(API.format(slug=slug), params={"content": "true"})
                 resp.raise_for_status()
             except httpx.HTTPError as e:
