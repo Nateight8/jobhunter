@@ -12,3 +12,6 @@ slugs = ["plaid", "mistral", "palantir"]
 
 [ashby]
 slugs = ["linear", "ramp", "openai"]
+
+[hackernews]
+threads = 2   # how many recent monthly "Who is hiring?" threads to read

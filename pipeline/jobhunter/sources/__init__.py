@@ -2,6 +2,7 @@ from .. import db
 from .ashby import AshbySource
 from .base import Source
 from .greenhouse import GreenhouseSource
+from .hackernews import HackerNewsSource
 from .lever import LeverSource
 from .remoteok import RemoteOKSource
 from .remotive import RemotiveSource
@@ -29,7 +30,9 @@ def build_source(name: str, config: dict) -> Source:
         return RemotiveSource(config.get("remotive", {}).get("categories"))
     if name == "remoteok":
         return RemoteOKSource()
+    if name == "hackernews":
+        return HackerNewsSource(config.get("hackernews", {}).get("threads", 2))
     raise SystemExit(f"Unknown source: {name}")
 
 
-SOURCE_NAMES = ["greenhouse", "lever", "ashby", "remotive", "remoteok"]
+SOURCE_NAMES = ["greenhouse", "lever", "ashby", "remotive", "remoteok", "hackernews"]
