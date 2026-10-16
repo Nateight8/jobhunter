@@ -27,7 +27,7 @@ def extract(text: str | None) -> set[tuple[str, str]]:
             slug = m.group(1)
             if slug.lower() in IGNORE:
                 continue
-            found.add((ats, slug.lower() if ats == "greenhouse" else slug))
+            found.add((ats, slug.lower()))
     return found
 
 

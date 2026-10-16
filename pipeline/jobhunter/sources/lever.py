@@ -37,7 +37,7 @@ class LeverSource(Source):
                 resp = await client.get(API.format(slug=slug), params={"mode": "json"})
                 resp.raise_for_status()
             except httpx.HTTPError as e:
-                log.warning("lever/%s skipped: %s", slug, e)
+                log.warning("lever/%s skipped: %r", slug, e)
                 return []
 
         jobs: list[RawJob] = []

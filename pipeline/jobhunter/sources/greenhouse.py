@@ -47,7 +47,7 @@ class GreenhouseSource(Source):
                 resp = await client.get(API.format(slug=slug), params={"content": "true"})
                 resp.raise_for_status()
             except httpx.HTTPError as e:
-                log.warning("greenhouse/%s skipped: %s", slug, e)
+                log.warning("greenhouse/%s skipped: %r", slug, e)
                 return []
 
         jobs: list[RawJob] = []

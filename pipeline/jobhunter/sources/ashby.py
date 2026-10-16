@@ -48,7 +48,7 @@ class AshbySource(Source):
                 )
                 resp.raise_for_status()
             except httpx.HTTPError as e:
-                log.warning("ashby/%s skipped: %s", slug, e)
+                log.warning("ashby/%s skipped: %r", slug, e)
                 return []
 
         jobs: list[RawJob] = []
