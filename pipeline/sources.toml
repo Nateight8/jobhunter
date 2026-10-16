@@ -1,3 +1,6 @@
 # Company board slugs per source. Bad slugs are skipped with a warning.
 [greenhouse]
 slugs = ["stripe", "gitlab", "vercel", "cloudflare", "datadog", "anthropic", "figma", "discord"]
+
+[remotive]
+categories = ["software-dev"]
