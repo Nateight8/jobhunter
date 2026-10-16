@@ -1,21 +1,26 @@
-# shadcn/ui monorepo template
+# jobhunter
 
-This is a Next.js monorepo template with shadcn/ui.
+Open-source, self-hosted job hunting engine. Scrapes LinkedIn, Indeed, company ATS boards and remote boards, filters out ghost listings, and surfaces verified jobs matching your stack. Runs locally with Postgres.
 
-## Adding components
+> **Status:** early development. Nothing works yet.
 
-To add components to your app, run the following command at the root of your `web` app:
+## Planned architecture
 
-```bash
-pnpm dlx shadcn@latest add button -c apps/web
-```
+- `pipeline/`: Python. Scrapes, normalizes, dedupes, verifies and scores jobs, then writes to Postgres.
+- `apps/api`: Node/TS. Reads Postgres and serves the REST API, saved filters and notifications.
+- `apps/web`: Next.js + shadcn/ui. The review client.
+- `packages/`: shared JS configs and UI components.
+- `db/migrations/`: plain SQL migrations, shared by everything.
 
-This will place the ui components in the `packages/ui/src/components` directory.
+Postgres is the only boundary between the Python and Node sides.
 
-## Using components
+## Roadmap
 
-To use the components in your app, import them from the `ui` package.
+1. Scraper ingestion into Postgres (ATS boards first, then LinkedIn/Indeed via JobSpy)
+2. Company resolution and ghost-job verification
+3. API and web client with filters
+4. Notifications and CV generation
 
-```tsx
-import { Button } from "@workspace/ui/components/button";
-```
+## License
+
+MIT
