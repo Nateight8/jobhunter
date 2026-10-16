@@ -5,18 +5,30 @@ import tomllib
 from pathlib import Path
 
 from . import db
+from .harvest import harvest
 from .sources import SOURCE_NAMES, build_source
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="jobhunter")
     sub = parser.add_subparsers(dest="cmd", required=True)
+
     scrape = sub.add_parser("scrape", help="Run a source and store jobs")
     scrape.add_argument("source", choices=SOURCE_NAMES)
     scrape.add_argument("--dry-run", action="store_true", help="Fetch only, no DB writes")
-    args = parser.parse_args()
 
+    sub.add_parser("harvest", help="Find ATS board slugs in stored jobs and save them")
+
+    args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    if args.cmd == "harvest":
+        with db.connect() as conn:
+            added = harvest(conn)
+        print("new companies:", added)
+        return
+
     config = tomllib.loads((Path(__file__).resolve().parents[1] / "sources.toml").read_text())
     source = build_source(args.source, config)
 

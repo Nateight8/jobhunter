@@ -69,3 +69,11 @@ def upsert_jobs(conn: psycopg.Connection, jobs: list[RawJob]) -> tuple[int, int]
             if cur.fetchone()[0]:
                 new += 1
     return len(jobs), new
+
+
+def ats_slugs(conn: psycopg.Connection, ats_type: str) -> list[str]:
+    rows = conn.execute(
+        "SELECT ats_slug FROM companies WHERE ats_type = %s AND ats_slug IS NOT NULL",
+        (ats_type,),
+    ).fetchall()
+    return [r[0] for r in rows]
