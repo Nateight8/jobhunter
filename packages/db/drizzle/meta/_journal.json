@@ -15,6 +15,13 @@
       "when": 1792215471837,
       "tag": "0001_awesome_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792256343207,
+      "tag": "0002_living_malice",
+      "breakpoints": true
     }
   ]
 }
