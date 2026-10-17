@@ -27,12 +27,12 @@ Audience: job hunters (first user: a developer in Nigeria applying to remote rol
 
 ## 3. Current state (built)
 
-| Area | Status |
-|---|---|
+| Area            | Status                                                                                                                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Python pipeline | Sources: Greenhouse, Lever, Ashby, RemoteOK, Remotive, Hacker News "Who is hiring". Slug harvester, stale-job closing, board health (`enabled`, `fail_count`, `open_jobs`), `make scrape-all` |
-| Database | Drizzle schema in `packages/db` (`companies`, `jobs`, `scrape_runs`), Postgres in Docker |
-| API | `apps/api`: GraphQL Yoga + Pothos, feature modules, cursor-paginated `jobs` query with filters (search, stack, remote type, source, startup size), `job(id)`, generated `schema.graphql` |
-| Web | `apps/web`: Next.js + Apollo Client (Next.js integration), feed with URL-driven filters and a detail panel |
+| Database        | Drizzle schema in `packages/db` (`companies`, `jobs`, `scrape_runs`), Postgres in Docker                                                                                                      |
+| API             | `apps/api`: GraphQL Yoga + Pothos, feature modules, cursor-paginated `jobs` query with filters (search, stack, remote type, source, startup size), `job(id)`, generated `schema.graphql`      |
+| Web             | `apps/web`: Next.js + Apollo Client (Next.js integration), feed with URL-driven filters and a detail panel                                                                                    |
 
 ## 4. Architecture
 
@@ -55,11 +55,11 @@ Jobs differ in how you apply, and that is stored per job, not guessed in the UI.
 
 ### 5.1 Apply method (on `jobs`, computed by `enrich`)
 
-| Field | Values |
-|---|---|
+| Field          | Values                                                                                                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `apply_method` | `form` (employer ATS form), `email` (contact address in posting), `external` (other site or aggregator redirect), `unknown` |
-| `apply_ats` | `greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `workable`, `linkedin`, ... or null |
-| `apply_email` | address found in the posting, only for `email` |
+| `apply_ats`    | `greenhouse`, `lever`, `ashby`, `workday`, `smartrecruiters`, `workable`, `linkedin`, ... or null                           |
+| `apply_email`  | address found in the posting, only for `email`                                                                              |
 
 Sources: ATS boards give `form` with a known ATS. HN postings are checked for ATS links, then emails, then plain links. RemoteOK and Remotive are `external` until their redirects are followed.
 
@@ -91,6 +91,7 @@ Single user, no login, one profile. Manual entry through forms. A CV file can be
 **Links**: LinkedIn, GitHub, portfolio, other (label + URL).
 
 **Eligibility**
+
 - country of residence
 - regions authorized to work in (list)
 - needs visa sponsorship (yes/no)
@@ -98,6 +99,7 @@ Single user, no login, one profile. Manual entry through forms. A CV file can be
 - notice period, earliest start date
 
 **Search preferences** (pre-fill the feed filters)
+
 - target roles, stack keywords, seniority
 - work modes (remote, hybrid, onsite), regions open to
 - salary expectation (minimum, currency, period)
@@ -113,15 +115,15 @@ Single user, no login, one profile. Manual entry through forms. A CV file can be
 
 **Answers bank**: reusable answers to questions that recur in forms. Each has a key, the question wording, and the answer. Pre-seeded keys, left empty for the user to fill:
 
-| Key | Example question |
-|---|---|
-| `work_authorization` | Are you legally authorized to work in X? |
-| `sponsorship` | Will you require visa sponsorship? |
-| `notice_period` | When can you start? |
-| `salary_expectation` | Expected compensation? |
-| `relocation` | Are you willing to relocate? |
-| `referral_source` | How did you hear about us? |
-| `why_remote` / `why_us` | free text, tailored per job later |
+| Key                     | Example question                         |
+| ----------------------- | ---------------------------------------- |
+| `work_authorization`    | Are you legally authorized to work in X? |
+| `sponsorship`           | Will you require visa sponsorship?       |
+| `notice_period`         | When can you start?                      |
+| `salary_expectation`    | Expected compensation?                   |
+| `relocation`            | Are you willing to relocate?             |
+| `referral_source`       | How did you hear about us?               |
+| `why_remote` / `why_us` | free text, tailored per job later        |
 
 **Documents**: master CV (PDF, one default), cover letter base text, other files. Stored on disk under `data/documents/` (gitignored). The database holds only metadata and path.
 
@@ -155,16 +157,16 @@ CV import by AI, multiple profiles, login, encrypting stored data, editing PDFs.
 
 ## 7. Roadmap
 
-| Phase | Deliverable |
-|---|---|
-| 0 | Ingestion, API, feed (done) |
-| 1 | **Profile** (this document, section 6) |
-| 2 | `enrich` step for `apply_method` / `apply_ats` / `apply_email`; applications tracker (saved, preparing, applied, interviewing, offer, rejected, hidden) |
-| 3 | Eligibility and ghost-job enrichment, using profile eligibility facts; feed defaults to eligible, verified jobs |
-| 4 | Tailoring workbench: AI-tailored CV from structured profile, deterministic ATS keyword score, cover letter, PDF export. AI provider key in `.env`, model name configurable |
-| 5 | Autofill browser extension (Greenhouse, Lever, Ashby first) |
-| 6 | Integrations: GitHub project context (user picks repos), email apply and follow-ups over SMTP |
-| 7 | Optional hosted scraper that local instances sync public job data from |
+| Phase | Deliverable                                                                                                                                                                |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0     | Ingestion, API, feed (done)                                                                                                                                                |
+| 1     | **Profile** (this document, section 6)                                                                                                                                     |
+| 2     | `enrich` step for `apply_method` / `apply_ats` / `apply_email`; applications tracker (saved, preparing, applied, interviewing, offer, rejected, hidden)                    |
+| 3     | Eligibility and ghost-job enrichment, using profile eligibility facts; feed defaults to eligible, verified jobs                                                            |
+| 4     | Tailoring workbench: AI-tailored CV from structured profile, deterministic ATS keyword score, cover letter, PDF export. AI provider key in `.env`, model name configurable |
+| 5     | Autofill browser extension (Greenhouse, Lever, Ashby first)                                                                                                                |
+| 6     | Integrations: GitHub project context (user picks repos), email apply and follow-ups over SMTP                                                                              |
+| 7     | Optional hosted scraper that local instances sync public job data from                                                                                                     |
 
 ## 8. Data model additions
 
@@ -196,16 +198,16 @@ Personal state lives in separate tables keyed by `job_id`, never on `jobs`, whic
 
 ## 11. Decisions log
 
-| Decision | Choice |
-|---|---|
-| Pipeline language | Python, Postgres as the only boundary |
-| Schema owner | Drizzle (`packages/db`), Python writes via raw SQL |
-| API | GraphQL Yoga + Pothos (code-first), generated `schema.graphql` committed |
-| Web client | Apollo Client with the Next.js integration |
-| Scraping | CLI only; web app is read-only for scraping |
-| Applying | Assisted apply in v1; autofill extension later |
-| Apply method | Stored per job, computed in `enrich` |
-| Credentials | `.env`, integrations deferred |
+| Decision          | Choice                                                                   |
+| ----------------- | ------------------------------------------------------------------------ |
+| Pipeline language | Python, Postgres as the only boundary                                    |
+| Schema owner      | Drizzle (`packages/db`), Python writes via raw SQL                       |
+| API               | GraphQL Yoga + Pothos (code-first), generated `schema.graphql` committed |
+| Web client        | Apollo Client with the Next.js integration                               |
+| Scraping          | CLI only; web app is read-only for scraping                              |
+| Applying          | Assisted apply in v1; autofill extension later                           |
+| Apply method      | Stored per job, computed in `enrich`                                     |
+| Credentials       | `.env`, integrations deferred                                            |
 
 ## 12. Open questions
 
