@@ -2,31 +2,31 @@ type Job {
   applyUrl: String
   boardSize: Int
   closedAt: String
-  companyName: String
+  companyName: String!
 
   """Raw HTML. Loaded on demand, so avoid requesting it in lists."""
   description: String
-  firstSeenAt: String
-  id: ID
+  firstSeenAt: String!
+  id: ID!
   location: String
   postedAt: String
-  remoteType: RemoteType
+  remoteType: RemoteType!
   score: Int
-  source: String
-  status: String
-  title: String
-  url: String
+  source: String!
+  status: String!
+  title: String!
+  url: String!
 }
 
 type JobConnection {
-  edges: [JobEdge!]
-  pageInfo: PageInfo
-  totalCount: Int
+  edges: [JobEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
 type JobEdge {
-  cursor: String
-  node: Job
+  cursor: String!
+  node: Job!
 }
 
 input JobFilter {
@@ -49,12 +49,12 @@ input JobFilter {
 
 type PageInfo {
   endCursor: String
-  hasNextPage: Boolean
+  hasNextPage: Boolean!
 }
 
 type Query {
   job(id: ID!): Job
-  jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection
+  jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection!
 }
 
 enum RemoteType {

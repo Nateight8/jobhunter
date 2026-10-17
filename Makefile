@@ -28,3 +28,6 @@ api:
 
 schema:
 	pnpm --filter @workspace/api schema:print
+
+web:
+	pnpm --filter web dev
