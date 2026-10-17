@@ -1,0 +1,25 @@
+{
+  "name": "@workspace/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "schema:print": "tsx src/scripts/print-schema.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@pothos/core": "^4.15.1",
+    "@workspace/db": "workspace:*",
+    "dotenv": "^18.0.8",
+    "drizzle-orm": "^0.45.4",
+    "graphql": "^17.0.2",
+    "graphql-yoga": "^5.24.6"
+  }
+}

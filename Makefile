@@ -22,3 +22,9 @@ harvest:
 
 psql:
 	docker exec -it jobhunter-db psql -U jobhunter
+
+api:
+	pnpm --filter @workspace/api dev
+
+schema:
+	pnpm --filter @workspace/api schema:print

@@ -1,0 +1,65 @@
+type Job {
+  applyUrl: String
+  boardSize: Int
+  closedAt: String
+  companyName: String
+
+  """Raw HTML. Loaded on demand, so avoid requesting it in lists."""
+  description: String
+  firstSeenAt: String
+  id: ID
+  location: String
+  postedAt: String
+  remoteType: RemoteType
+  score: Int
+  source: String
+  status: String
+  title: String
+  url: String
+}
+
+type JobConnection {
+  edges: [JobEdge!]
+  pageInfo: PageInfo
+  totalCount: Int
+}
+
+type JobEdge {
+  cursor: String
+  node: Job
+}
+
+input JobFilter {
+  includeClosed: Boolean
+  remoteTypes: [RemoteType!]
+
+  """Matches job title or company name"""
+  search: String
+  sources: [String!]
+
+  """Keywords, any match, e.g. ["node", "react"]"""
+  stack: [String!]
+
+  """Default 50 open jobs"""
+  startupMaxBoardSize: Int
+
+  """Only jobs from ATS boards under the size limit"""
+  startupOnly: Boolean
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean
+}
+
+type Query {
+  job(id: ID!): Job
+  jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection
+}
+
+enum RemoteType {
+  HYBRID
+  ONSITE
+  REMOTE
+  UNKNOWN
+}
