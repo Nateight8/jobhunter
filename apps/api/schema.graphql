@@ -1,3 +1,44 @@
+type Education {
+  degree: String
+  endDate: String
+  field: String
+  id: ID!
+  school: String!
+  startDate: String
+}
+
+input EducationInput {
+  degree: String
+  endDate: String
+  field: String
+  school: String!
+  startDate: String
+}
+
+type Experience {
+  bullets: [String!]!
+  company: String!
+  endDate: String
+  id: ID!
+  isCurrent: Boolean!
+  location: String
+  startDate: String
+  technologies: [String!]!
+  title: String!
+}
+
+"""Dates look like 2024-05. Ignored endDate when isCurrent is true."""
+input ExperienceInput {
+  bullets: [String!]
+  company: String!
+  endDate: String
+  isCurrent: Boolean
+  location: String
+  startDate: String
+  technologies: [String!]
+  title: String!
+}
+
 type Job {
   applyUrl: String
   boardSize: Int
@@ -47,14 +88,110 @@ input JobFilter {
   startupOnly: Boolean
 }
 
+type Mutation {
+  """Replaces the whole education list."""
+  saveEducation(items: [EducationInput!]!): Profile!
+
+  """Replaces the whole experience list; order = array order."""
+  saveExperiences(items: [ExperienceInput!]!): Profile!
+
+  """Partial update: omitted fields stay, null clears."""
+  saveProfile(input: ProfileInput!): Profile!
+
+  """Replaces the whole project list."""
+  saveProjects(items: [ProjectInput!]!): Profile!
+
+  """Replaces the whole skill list. Duplicate names are dropped."""
+  saveSkills(items: [SkillInput!]!): Profile!
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
 }
 
+type Profile {
+  authorizedRegions: [String!]!
+  city: String
+  confirmedAt: String
+  country: String
+  education: [Education!]!
+  email: String
+  experiences: [Experience!]!
+  fullName: String
+  githubUrl: String
+  headline: String
+  id: ID!
+  linkedinUrl: String
+  links: [ProfileLink!]!
+  phone: String
+  portfolioUrl: String
+  projects: [Project!]!
+  readiness: ProfileReadiness!
+  skills: [Skill!]!
+  summary: String
+  timezone: String
+  yearsExperience: Int
+}
+
+input ProfileInput {
+  authorizedRegions: [String!]
+  city: String
+  country: String
+  email: String
+  fullName: String
+  githubUrl: String
+  headline: String
+  linkedinUrl: String
+  links: [ProfileLinkInput!]
+  phone: String
+  portfolioUrl: String
+  summary: String
+  timezone: String
+  yearsExperience: Int
+}
+
+type ProfileLink {
+  label: String!
+  url: String!
+}
+
+input ProfileLinkInput {
+  label: String!
+  url: String!
+}
+
+"""
+missing holds any of: fullName, email, phone, country, authorizedRegions, cv
+"""
+type ProfileReadiness {
+  missing: [String!]!
+  ready: Boolean!
+}
+
+type Project {
+  bullets: [String!]!
+  description: String
+  id: ID!
+  name: String!
+  technologies: [String!]!
+  url: String
+}
+
+input ProjectInput {
+  bullets: [String!]
+  description: String
+  name: String!
+  technologies: [String!]
+  url: String
+}
+
 type Query {
   job(id: ID!): Job
   jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection!
+
+  """The single local profile. Created empty on first read."""
+  profile: Profile!
 }
 
 enum RemoteType {
@@ -62,4 +199,15 @@ enum RemoteType {
   ONSITE
   REMOTE
   UNKNOWN
+}
+
+type Skill {
+  category: String
+  id: ID!
+  name: String!
+}
+
+input SkillInput {
+  category: String
+  name: String!
 }

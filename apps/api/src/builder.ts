@@ -9,5 +9,6 @@ export const builder = new SchemaBuilder<{
   defaultFieldNullability: false,
 });
 
-// Declared once here. Each module adds its fields with builder.queryFields(...).
+// Declared once here. Each module adds fields with queryFields / mutationFields.
 builder.queryType({});
+builder.mutationType({});
