@@ -1,3 +1,23 @@
+"""
+File metadata. Bytes are served from the downloadUrl, never through GraphQL.
+"""
+type Document {
+  createdAt: String!
+  downloadUrl: String!
+  filename: String!
+  id: ID!
+  isDefault: Boolean!
+  kind: DocumentKind!
+  mimeType: String!
+  sizeBytes: Int!
+}
+
+enum DocumentKind {
+  COVER_LETTER
+  CV
+  OTHER
+}
+
 type Education {
   degree: String
   endDate: String
@@ -89,6 +109,11 @@ input JobFilter {
 }
 
 type Mutation {
+  """
+  Deletes a document. If it was the default, the newest one of its kind takes over.
+  """
+  deleteDocument(id: ID!): Profile!
+
   """Replaces the whole education list."""
   saveEducation(items: [EducationInput!]!): Profile!
 
@@ -103,6 +128,9 @@ type Mutation {
 
   """Replaces the whole skill list. Duplicate names are dropped."""
   saveSkills(items: [SkillInput!]!): Profile!
+
+  """Makes this document the default for its kind."""
+  setDefaultDocument(id: ID!): Profile!
 }
 
 type PageInfo {
@@ -115,6 +143,7 @@ type Profile {
   city: String
   confirmedAt: String
   country: String
+  documents: [Document!]!
   education: [Education!]!
   email: String
   experiences: [Experience!]!
