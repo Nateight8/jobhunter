@@ -121,3 +121,48 @@ def close_stale(
             )
             closed += cur.rowcount
     return closed
+
+
+def disabled_slugs(conn: psycopg.Connection, ats_type: str) -> list[str]:
+    rows = conn.execute(
+        "SELECT ats_slug FROM companies WHERE ats_type = %s AND NOT enabled", (ats_type,)
+    ).fetchall()
+    return [r[0] for r in rows]
+
+
+MAX_FAILS = 5  # consecutive failed runs before a board is disabled
+
+
+def record_board_results(conn: psycopg.Connection, ats_type: str, results: dict) -> int:
+    """Save per-board outcome. Returns how many boards were newly disabled."""
+    # If nothing succeeded, the network is probably down: don't blame the boards.
+    if not any(err is None for _, err in results.values()):
+        return 0
+    disabled = 0
+    with conn.cursor() as cur:
+        for slug, (count, error) in results.items():
+            if error is None:
+                cur.execute(
+                    """
+                    INSERT INTO companies (name, ats_type, ats_slug, open_jobs, last_scraped_at)
+                    VALUES (%s, %s, %s, %s, now())
+                    ON CONFLICT (ats_type, ats_slug) DO UPDATE SET
+                        open_jobs = EXCLUDED.open_jobs, last_scraped_at = now(),
+                        fail_count = 0, last_error = NULL
+                    """,
+                    (slug, ats_type, slug, count),
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO companies (name, ats_type, ats_slug, fail_count, last_error)
+                    VALUES (%s, %s, %s, 1, %s)
+                    ON CONFLICT (ats_type, ats_slug) DO UPDATE SET
+                        fail_count = companies.fail_count + 1, last_error = EXCLUDED.last_error,
+                        enabled = companies.enabled AND companies.fail_count + 1 < %s
+                    RETURNING NOT enabled
+                    """,
+                    (slug, ats_type, slug, error, MAX_FAILS),
+                )
+                disabled += bool(cur.fetchone()[0])
+    return disabled

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from . import db
 from .harvest import harvest
-from .sources import SOURCE_NAMES, build_source
+from .sources import SOURCE_NAMES, BoardSource, build_source
 
 DISCOVERY = ["remotive", "remoteok", "hackernews"]
 BOARDS = ["greenhouse", "lever", "ashby"]
@@ -38,7 +38,12 @@ def run_source(name: str, config: dict, dry_run: bool = False) -> str:
             seen, new = db.upsert_jobs(conn, jobs)
             closed = db.close_stale(conn, source.name, jobs, started)
             db.finish_run(conn, run_id, seen, new, None)
-            return f"{source.name}: {seen} seen, {new} new, {closed} closed"
+            extra = ""
+            if isinstance(source, BoardSource):
+                off = db.record_board_results(conn, source.name, source.results)
+                failed = sum(1 for _, err in source.results.values() if err)
+                extra = f", {failed} boards failed, {off} newly disabled"
+            return f"{source.name}: {seen} seen, {new} new, {closed} closed{extra}"
         except Exception as e:
             db.finish_run(conn, run_id, 0, 0, str(e))
             raise

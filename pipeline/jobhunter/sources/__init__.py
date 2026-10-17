@@ -1,6 +1,6 @@
 from .. import db
 from .ashby import AshbySource
-from .base import Source
+from .base import BoardSource, Source
 from .greenhouse import GreenhouseSource
 from .hackernews import HackerNewsSource
 from .lever import LeverSource
@@ -9,13 +9,14 @@ from .remotive import RemotiveSource
 
 
 def _slugs(ats: str, config: dict) -> list[str]:
-    """Bootstrap slugs from sources.toml plus harvested slugs from the DB."""
+    """sources.toml bootstrap slugs plus harvested ones, minus disabled boards."""
     slugs = set(config.get(ats, {}).get("slugs", []))
     try:
         with db.connect() as conn:
             slugs |= set(db.ats_slugs(conn, ats))
+            slugs -= set(db.disabled_slugs(conn, ats))
     except Exception:
-        pass  # DB unavailable (e.g. dry run without Postgres): use the toml list only
+        pass  # DB unavailable (dry run without Postgres): toml list only
     return sorted(slugs)
 
 

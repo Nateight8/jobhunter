@@ -1,66 +1,33 @@
-import asyncio
-import logging
 from datetime import datetime
-
-import httpx
 
 from ..models import RawJob
 from ..normalize import infer_remote_type
-from .base import Source
-
-log = logging.getLogger(__name__)
-API = "https://api.ashbyhq.com/posting-api/job-board/{slug}"
+from .base import BoardSource
 
 
 def _parse_dt(value: str | None) -> datetime | None:
-    if not value:
-        return None
     try:
-        return datetime.fromisoformat(value)
+        return datetime.fromisoformat(value) if value else None
     except ValueError:
         return None
 
 
-class AshbySource(Source):
+class AshbySource(BoardSource):
     name = "ashby"
+    params = {"includeCompensation": "true"}
 
-    def __init__(self, slugs: list[str], concurrency: int = 5):
-        self.slugs = slugs
-        self.concurrency = concurrency
+    def url(self, slug: str) -> str:
+        return f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
 
-    async def fetch(self) -> list[RawJob]:
-        sem = asyncio.Semaphore(self.concurrency)
-        headers = {"User-Agent": "jobhunter/0.1 (open-source job aggregator)"}
-        async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=10), headers=headers) as client:
-            boards = await asyncio.gather(
-                *(self._board(client, sem, slug) for slug in self.slugs)
-            )
-        return [job for board in boards for job in board]
-
-    async def _board(
-        self, client: httpx.AsyncClient, sem: asyncio.Semaphore, slug: str
-    ) -> list[RawJob]:
-        async with sem:
-            try:
-              async with asyncio.timeout(60):
-                resp = await client.get(
-                    API.format(slug=slug), params={"includeCompensation": "true"}
-                )
-                resp.raise_for_status()
-            except httpx.HTTPError as e:
-                log.warning("ashby/%s skipped: %r", slug, e)
-                return []
-
-        jobs: list[RawJob] = []
-        for j in resp.json().get("jobs", []):
+    def parse(self, slug: str, data) -> list[RawJob]:
+        jobs = []
+        for j in data.get("jobs", []):
             if j.get("isListed") is False:
                 continue
             location = j.get("location")
             workplace = (j.get("workplaceType") or "").lower()
-            if workplace in ("remote", "hybrid"):
+            if workplace in ("remote", "hybrid", "onsite"):
                 remote = workplace
-            elif workplace == "onsite":
-                remote = "onsite"
             elif j.get("isRemote"):
                 remote = "remote"
             else:
@@ -72,7 +39,7 @@ class AshbySource(Source):
                     url=j["jobUrl"],
                     apply_url=j.get("applyUrl") or j["jobUrl"],
                     title=j["title"],
-                    company_name=slug,  # Ashby doesn't return a display name
+                    company_name=slug,
                     location=location,
                     remote_type=remote,
                     description=j.get("descriptionHtml"),
@@ -80,5 +47,4 @@ class AshbySource(Source):
                     raw=j,
                 )
             )
-        log.info("ashby/%s: %d jobs", slug, len(jobs))
         return jobs
