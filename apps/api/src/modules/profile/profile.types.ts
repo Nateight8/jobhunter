@@ -10,7 +10,7 @@ import {
 
 const monthOf = (d: string | null) => (d ? d.slice(0, 7) : null); // YYYY-MM
 
-const LinkRef = builder.objectRef<{ label: string; url: string }>("ProfileLink");
+export const LinkRef = builder.objectRef<{ label: string; url: string }>("ProfileLink");
 LinkRef.implement({
   fields: (t) => ({
     label: t.exposeString("label"),
@@ -169,5 +169,16 @@ export const SkillInput = builder.inputType("SkillInput", {
   fields: (t) => ({
     name: t.string({ required: true }),
     category: t.string(),
+  }),
+});
+
+export const ConfirmProfileInput = builder.inputType("ConfirmProfileInput", {
+  description: "The full reviewed profile. Every list replaces what is stored.",
+  fields: (t) => ({
+    profile: t.field({ type: ProfileInput, required: true }),
+    experiences: t.field({ type: [ExperienceInput], required: true }),
+    education: t.field({ type: [EducationInput], required: true }),
+    projects: t.field({ type: [ProjectInput], required: true }),
+    skills: t.field({ type: [SkillInput], required: true }),
   }),
 });

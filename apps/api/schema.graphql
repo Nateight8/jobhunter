@@ -1,3 +1,12 @@
+"""The full reviewed profile. Every list replaces what is stored."""
+input ConfirmProfileInput {
+  education: [EducationInput!]!
+  experiences: [ExperienceInput!]!
+  profile: ProfileInput!
+  projects: [ProjectInput!]!
+  skills: [SkillInput!]!
+}
+
 """
 File metadata. Bytes are served from the downloadUrl, never through GraphQL.
 """
@@ -16,6 +25,59 @@ enum DocumentKind {
   COVER_LETTER
   CV
   OTHER
+}
+
+type DraftEducation {
+  degree: String
+  endDate: String
+  field: String
+  school: String!
+  startDate: String
+}
+
+type DraftExperience {
+  bullets: [String!]!
+  company: String!
+  endDate: String
+  isCurrent: Boolean!
+  location: String
+  startDate: String
+  technologies: [String!]!
+  title: String!
+}
+
+"""
+What the model read from the CV. Reviewed by the user before anything is saved.
+"""
+type DraftProfile {
+  city: String
+  country: String
+  education: [DraftEducation!]!
+  email: String
+  experiences: [DraftExperience!]!
+  fullName: String
+  githubUrl: String
+  headline: String
+  linkedinUrl: String
+  otherLinks: [ProfileLink!]!
+  phone: String
+  portfolioUrl: String
+  projects: [DraftProject!]!
+  skills: [DraftSkill!]!
+  summary: String
+}
+
+type DraftProject {
+  bullets: [String!]!
+  description: String
+  name: String!
+  technologies: [String!]!
+  url: String
+}
+
+type DraftSkill {
+  category: String
+  name: String!
 }
 
 type Education {
@@ -110,9 +172,20 @@ input JobFilter {
 
 type Mutation {
   """
+  Saves the reviewed profile in one transaction, computes years of experience from the experience dates and marks the draft confirmed. Requires name, email, phone, country and at least one authorized region.
+  """
+  confirmProfile(draftId: ID, input: ConfirmProfileInput!): Profile!
+
+  """
   Deletes a document. If it was the default, the newest one of its kind takes over.
   """
   deleteDocument(id: ID!): Profile!
+  discardDraft(id: ID!): Profile!
+
+  """
+  Reads a stored CV with Gemini and saves the result as a draft (see Profile.draft). Takes a few seconds. A failed extraction leaves a draft with status failed and an error message.
+  """
+  extractProfile(documentId: ID!): Profile!
 
   """Replaces the whole education list."""
   saveEducation(items: [EducationInput!]!): Profile!
@@ -144,6 +217,9 @@ type Profile {
   confirmedAt: String
   country: String
   documents: [Document!]!
+
+  """The live CV-extraction draft, if any."""
+  draft: ProfileDraft
   education: [Education!]!
   email: String
   experiences: [Experience!]!
@@ -161,6 +237,18 @@ type Profile {
   summary: String
   timezone: String
   yearsExperience: Int
+}
+
+type ProfileDraft {
+  createdAt: String!
+  data: DraftProfile
+  documentId: ID
+  error: String
+  id: ID!
+  model: String
+
+  """pending, ready or failed"""
+  status: String!
 }
 
 input ProfileInput {
