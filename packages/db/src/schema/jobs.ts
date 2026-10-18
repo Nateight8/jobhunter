@@ -43,6 +43,8 @@ export const jobs = pgTable(
     dedupeKey: text("dedupe_key").notNull(),
     status: text("status").notNull().default("unverified"), // verified | likely | unverified | ghost
     score: integer("score"),
+    // Canonical region codes (see shared/regions.json). Null = not classified. Written by `jobhunter enrich`.
+    regions: text("regions").array(),
 
     raw: jsonb("raw"),
   },
@@ -52,6 +54,7 @@ export const jobs = pgTable(
     index("jobs_company_id_idx").on(t.companyId),
     index("jobs_status_idx").on(t.status),
     index("jobs_last_seen_idx").on(t.lastSeenAt),
+    index("jobs_regions_idx").using("gin", t.regions),
   ],
 );
 

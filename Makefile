@@ -31,3 +31,6 @@ schema:
 
 web:
 	pnpm --filter web dev
+
+enrich:
+	cd pipeline && uv run python -m jobhunter enrich

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useSuspenseQuery } from "@apollo/client/react";
 import {
   BOARD_COUNTS_QUERY,
@@ -9,6 +10,7 @@ import {
   BOARDS_QUERY,
   CREATE_BOARD_MUTATION,
   DELETE_BOARD_MUTATION,
+  REGION_OPTIONS_QUERY,
   REORDER_BOARDS_MUTATION,
   RESET_RECOMMENDED_MUTATION,
   UPDATE_BOARD_MUTATION,
@@ -20,9 +22,11 @@ const button = "rounded-md border px-2 py-1 text-xs hover:bg-muted disabled:opac
 const msg = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
 
 export function BoardsPage() {
+  const sp = useSearchParams();
   const { data } = useSuspenseQuery(BOARDS_QUERY);
   const { data: counts } = useQuery(BOARD_COUNTS_QUERY);
   const { data: presetData } = useQuery(BOARD_PRESETS_QUERY);
+  const { data: regionData } = useQuery(REGION_OPTIONS_QUERY);
   const refetch = { refetchQueries: [BOARDS_QUERY, BOARD_COUNTS_QUERY] };
   const [create, { loading: creating }] = useMutation(CREATE_BOARD_MUTATION, refetch);
   const [update, { loading: updating }] = useMutation(UPDATE_BOARD_MUTATION, refetch);
@@ -30,13 +34,15 @@ export function BoardsPage() {
   const [reorder] = useMutation(REORDER_BOARDS_MUTATION, refetch);
   const [resetRecommended] = useMutation(RESET_RECOMMENDED_MUTATION, refetch);
 
-  const [editing, setEditing] = useState<string | "new" | null>(null);
+  // /boards?edit=<id> opens that board's editor straight away (the "Edit board" link on the feed)
+  const [editing, setEditing] = useState<string | "new" | null>(sp.get("edit"));
   const [presetId, setPresetId] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const boards = data.boards;
   const hasRecommended = boards.some((b) => b.kind === "recommended");
   const preset = presetData?.boardPresets.find((p) => p.id === presetId) ?? null;
+  const names = Object.fromEntries((regionData?.regionOptions ?? []).map((o) => [o.code, o.name]));
 
   async function run(fn: () => Promise<unknown>): Promise<boolean> {
     setError(null);
@@ -146,7 +152,7 @@ export function BoardsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">{describeFilter(filters)}</p>
+                  <p className="text-sm text-muted-foreground">{describeFilter(filters, names)}</p>
                   <div className="flex flex-wrap gap-2">
                     <Link href={`/?board=${b.id}`} className={button}>
                       Open

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isRegionCode } from "../../lib/regions";
 import { int, list, str } from "../../lib/validate";
 import type { JobFilterInput } from "../jobs/jobs.filters";
 
@@ -13,6 +14,7 @@ export type BoardFilter = {
   startupMaxBoardSize?: number;
   titleIncludes?: string[];
   titleExcludes?: string[];
+  regions?: string[];
 };
 
 export type BoardFilterInputShape = {
@@ -24,6 +26,7 @@ export type BoardFilterInputShape = {
   startupMaxBoardSize?: number | null;
   titleIncludes?: string[] | null;
   titleExcludes?: string[] | null;
+  regions?: string[] | null;
 };
 
 // Reading is permissive: a bad or unknown field becomes "not set", never an error.
@@ -38,6 +41,7 @@ const READ = z
     startupMaxBoardSize: z.number().int().optional().catch(undefined),
     titleIncludes: strings,
     titleExcludes: strings,
+    regions: strings,
   })
   .catch({});
 
@@ -71,6 +75,10 @@ export function normalizeFilter(f: BoardFilterInputShape | null | undefined): Bo
   if (includes.length) out.titleIncludes = includes;
   const excludes = list("titleExcludes", f?.titleExcludes, 20, 60);
   if (excludes.length) out.titleExcludes = excludes;
+
+  // Unknown region codes are dropped, so a typo can't create a board that matches nothing.
+  const regions = [...new Set(list("regions", f?.regions, 40, 40).map((r) => r.toUpperCase()))].filter(isRegionCode);
+  if (regions.length) out.regions = regions;
 
   return out;
 }

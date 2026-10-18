@@ -10,6 +10,7 @@ export const BOARD_FILTER_FIELDS = graphql(`
     startupMaxBoardSize
     titleIncludes
     titleExcludes
+    regions
   }
 `);
 
@@ -55,6 +56,16 @@ export const BOARD_PRESETS_QUERY = graphql(`
       filter {
         ...BoardFilterFields
       }
+    }
+  }
+`);
+
+export const REGION_OPTIONS_QUERY = graphql(`
+  query RegionOptions {
+    regionOptions {
+      code
+      name
+      count
     }
   }
 `);

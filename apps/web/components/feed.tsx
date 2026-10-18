@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { BoardBar } from "./board-bar";
-import { FilterPanel } from "./filter-panel";
 import { JobList } from "./job-list";
 
 const loading = <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -27,9 +26,6 @@ export function Feed() {
           <BoardBar />
         </Suspense>
       </div>
-      <Suspense fallback={null}>
-        <FilterPanel />
-      </Suspense>
       <Suspense fallback={loading}>
         <JobList />
       </Suspense>

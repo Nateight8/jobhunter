@@ -66,6 +66,11 @@ export function JobList() {
           );
         })}
       </ul>
+      {edges.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No jobs match this board. Edit its filters, or pick another board.
+        </p>
+      )}
       {pageInfo.hasNextPage && (
         <button
           disabled={isPending}

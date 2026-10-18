@@ -19,6 +19,7 @@ type BoardCount {
 }
 
 type BoardFilter {
+  regions: [String!]
   remoteTypes: [RemoteType!]
   search: String
   sources: [String!]
@@ -30,6 +31,7 @@ type BoardFilter {
 }
 
 input BoardFilterInput {
+  regions: [String!]
   remoteTypes: [RemoteType!]
   search: String
   sources: [String!]
@@ -203,6 +205,11 @@ type JobEdge {
 
 input JobFilter {
   includeClosed: Boolean
+
+  """
+  Region codes (see regionOptions). Any match; jobs with no region are left out.
+  """
+  regions: [String!]
   remoteTypes: [RemoteType!]
 
   """Matches job title or company name"""
@@ -387,6 +394,16 @@ type Query {
 
   """The single local profile. Created empty on first read."""
   profile: Profile!
+  regionOptions: [RegionOption!]!
+}
+
+"""
+A region at least one open job is placed in. Options come from the data.
+"""
+type RegionOption {
+  code: String!
+  count: Int!
+  name: String!
 }
 
 enum RemoteType {

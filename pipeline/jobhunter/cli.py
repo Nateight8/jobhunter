@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 from . import db
+from .enrich import enrich
 from .harvest import harvest
 from .sources import SOURCE_NAMES, BoardSource, build_source
 
@@ -55,12 +56,19 @@ def run_harvest() -> str:
     return f"harvest: new companies {added}"
 
 
+def run_enrich(full_report: bool, dry_run: bool = False, sample: int = 0) -> str:
+    with db.connect() as conn:
+        summary, report = enrich(conn, dry_run=dry_run, sample=sample)
+    return report if full_report else summary
+
+
 def run_all(config: dict, skip: set[str]) -> int:
     steps: list[tuple[str, object]] = []
     steps += [(s, lambda s=s: run_source(s, config)) for s in DISCOVERY if s not in skip]
     steps.append(("harvest", run_harvest))
     steps += [(s, lambda s=s: run_source(s, config)) for s in BOARDS if s not in skip]
     steps.append(("harvest", run_harvest))  # picks up slugs for the next run
+    steps.append(("enrich", lambda: run_enrich(False)))
 
     summary: list[str] = []
     failed = 0
@@ -87,7 +95,11 @@ def main() -> None:
 
     sub.add_parser("harvest", help="Find ATS board slugs in stored jobs and save them")
 
-    everything = sub.add_parser("all", help="Run every source, harvest, then the boards")
+    en = sub.add_parser("enrich", help="Classify stored jobs (regions) and print a report")
+    en.add_argument("--dry-run", action="store_true", help="Report only, write nothing")
+    en.add_argument("--sample", type=int, default=0, help="Show N random classified and unclassified rows to spot-check")
+
+    everything = sub.add_parser("all", help="Run every source, harvest, the boards, then enrich")
     everything.add_argument("--skip", nargs="*", default=[], choices=SOURCE_NAMES)
 
     args = parser.parse_args()
@@ -96,6 +108,8 @@ def main() -> None:
 
     if args.cmd == "harvest":
         print(run_harvest())
+    elif args.cmd == "enrich":
+        print(run_enrich(True, args.dry_run, args.sample))
     elif args.cmd == "all":
         sys.exit(run_all(load_config(), set(args.skip)))
     else:

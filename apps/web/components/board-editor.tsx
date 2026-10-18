@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@apollo/client/react";
+import { REGION_OPTIONS_QUERY } from "../lib/board-queries";
 import { csv, describeFilter, REMOTE_OPTIONS, type FeedFilters } from "../lib/filters";
 import type { RemoteType } from "../lib/gql/graphql";
 
@@ -27,10 +29,22 @@ export function BoardEditor(props: {
   const [tin, setTin] = useState(init.titleIncludes.join(", "));
   const [tex, setTex] = useState(init.titleExcludes.join(", "));
   const [remote, setRemote] = useState<RemoteType[]>(init.remote);
+  const [regions, setRegions] = useState<string[]>(init.regions);
   const [sources, setSources] = useState<string[]>(init.sources);
   const [startup, setStartup] = useState(init.startup);
   const [startupMax, setStartupMax] = useState(init.startupMax ? String(init.startupMax) : "");
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const { data: regionData } = useQuery(REGION_OPTIONS_QUERY);
+  // Options come from the data. A saved region with no open jobs right now stays visible.
+  const options = useMemo(() => {
+    const list = [...(regionData?.regionOptions ?? [])];
+    for (const code of regions) {
+      if (!list.some((o) => o.code === code)) list.push({ code, name: code, count: 0 });
+    }
+    return list;
+  }, [regionData, regions]);
+  const names = Object.fromEntries(options.map((o) => [o.code, o.name]));
 
   const max = Number(startupMax);
   const current: FeedFilters = {
@@ -38,10 +52,11 @@ export function BoardEditor(props: {
     stack: csv(stack),
     remote,
     startup,
+    startupMax: startup && Number.isInteger(max) && max > 0 ? max : null,
     titleIncludes: csv(tin),
     titleExcludes: csv(tex),
     sources,
-    startupMax: startup && Number.isInteger(max) && max > 0 ? max : null,
+    regions,
   };
 
   function submit(e: FormEvent) {
@@ -62,6 +77,35 @@ export function BoardEditor(props: {
         <span className="text-sm font-medium">Name</span>
         <input className={input} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
       </label>
+
+      <fieldset className="space-y-1">
+        <legend className="text-sm font-medium">Regions</legend>
+        {options.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No region data yet. Run <code>make enrich</code> to classify your jobs.
+          </p>
+        ) : (
+          <div className="max-h-44 overflow-y-auto rounded-md border bg-background p-2">
+            <div className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+              {options.map((o) => (
+                <label key={o.code} className="flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={regions.includes(o.code)}
+                    onChange={() => setRegions(toggle(regions, o.code))}
+                  />
+                  {o.name} <span className="text-muted-foreground">({o.count})</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          None ticked means any job, including ones with no region stated. Ticking regions shows only jobs
+          placed in one of them. Tick Worldwide as well to include jobs open to anywhere.
+        </p>
+      </fieldset>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1">
           <span className="text-sm font-medium">Search</span>
@@ -127,7 +171,7 @@ export function BoardEditor(props: {
         )}
       </div>
 
-      <p className="text-sm text-muted-foreground">Shows: {describeFilter(current)}</p>
+      <p className="text-sm text-muted-foreground">Shows: {describeFilter(current, names)}</p>
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={props.saving} className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50">

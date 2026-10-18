@@ -20,6 +20,7 @@ BoardFilterRef.implement({
     startupMaxBoardSize: t.exposeInt("startupMaxBoardSize", { nullable: true }),
     titleIncludes: t.exposeStringList("titleIncludes", { nullable: true }),
     titleExcludes: t.exposeStringList("titleExcludes", { nullable: true }),
+    regions: t.exposeStringList("regions", { nullable: true }),
   }),
 });
 
@@ -33,6 +34,7 @@ export const BoardFilterInput = builder.inputType("BoardFilterInput", {
     startupMaxBoardSize: t.int(),
     titleIncludes: t.stringList(),
     titleExcludes: t.stringList(),
+    regions: t.stringList(),
   }),
 });
 

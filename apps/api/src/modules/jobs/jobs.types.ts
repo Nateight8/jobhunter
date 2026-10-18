@@ -23,6 +23,7 @@ export const JobFilter = builder.inputType("JobFilter", {
     includeClosed: t.boolean(),
     titleIncludes: t.stringList({ description: "Title must contain any of these words" }),
     titleExcludes: t.stringList({ description: "Title must contain none of these words" }),
+    regions: t.stringList({ description: "Region codes (see regionOptions). Any match; jobs with no region are left out." }),
   }),
 });
 

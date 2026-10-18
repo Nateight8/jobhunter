@@ -5,16 +5,17 @@ import type {
   RemoteType,
 } from "./gql/graphql";
 
+// A board's saved filter. Adding a filter means a field here, in the helpers below, and in the editor.
 export type FeedFilters = {
   q: string;
   stack: string[];
   remote: RemoteType[];
   startup: boolean;
+  startupMax: number | null;
   titleIncludes: string[];
   titleExcludes: string[];
-  // Saved with a board but not editable in the form; passed through untouched.
   sources: string[];
-  startupMax: number | null;
+  regions: string[]; // region codes
 };
 
 export const EMPTY_FILTERS: FeedFilters = {
@@ -22,10 +23,11 @@ export const EMPTY_FILTERS: FeedFilters = {
   stack: [],
   remote: [],
   startup: false,
+  startupMax: null,
   titleIncludes: [],
   titleExcludes: [],
   sources: [],
-  startupMax: null,
+  regions: [],
 };
 
 export const REMOTE_OPTIONS: { value: RemoteType; label: string }[] = [
@@ -33,9 +35,6 @@ export const REMOTE_OPTIONS: { value: RemoteType; label: string }[] = [
   { value: "HYBRID", label: "Hybrid" },
   { value: "ONSITE", label: "On-site" },
 ];
-
-const REMOTE_VALUES = new Set<string>(REMOTE_OPTIONS.map((o) => o.value));
-export const isRemote = (v: string): v is RemoteType => REMOTE_VALUES.has(v);
 
 export const csv = (s: string | null | undefined): string[] =>
   (s ?? "")
@@ -49,42 +48,12 @@ export function boardToFilters(f: BoardFilterFieldsFragment): FeedFilters {
     stack: f.stack ?? [],
     remote: f.remoteTypes ?? [],
     startup: f.startupOnly ?? false,
+    startupMax: f.startupMaxBoardSize ?? null,
     titleIncludes: f.titleIncludes ?? [],
     titleExcludes: f.titleExcludes ?? [],
     sources: f.sources ?? [],
-    startupMax: f.startupMaxBoardSize ?? null,
+    regions: f.regions ?? [],
   };
-}
-
-// URL = a board's saved filter plus per-field overrides. A key that is present, even empty, wins.
-export const OVERRIDE_KEYS = ["q", "stack", "remote", "startup", "tin", "tex"] as const;
-
-export const hasOverrides = (p: URLSearchParams) => OVERRIDE_KEYS.some((k) => p.has(k));
-
-export function readFilters(p: URLSearchParams, base: FeedFilters = EMPTY_FILTERS): FeedFilters {
-  return {
-    ...base,
-    q: p.has("q") ? (p.get("q") ?? "") : base.q,
-    stack: p.has("stack") ? csv(p.get("stack")) : base.stack,
-    remote: p.has("remote") ? csv(p.get("remote")).filter(isRemote) : base.remote,
-    startup: p.has("startup") ? p.get("startup") === "1" : base.startup,
-    titleIncludes: p.has("tin") ? csv(p.get("tin")) : base.titleIncludes,
-    titleExcludes: p.has("tex") ? csv(p.get("tex")) : base.titleExcludes,
-  };
-}
-
-const same = (a: string[], b: string[]) => a.join("\u0000") === b.join("\u0000");
-
-/** Only the fields that differ from the base are written, so the URL stays short. */
-export function writeOverrides(base: FeedFilters, f: FeedFilters): URLSearchParams {
-  const p = new URLSearchParams();
-  if (f.q !== base.q) p.set("q", f.q);
-  if (!same(f.stack, base.stack)) p.set("stack", f.stack.join(","));
-  if (!same(f.remote, base.remote)) p.set("remote", f.remote.join(","));
-  if (f.startup !== base.startup) p.set("startup", f.startup ? "1" : "0");
-  if (!same(f.titleIncludes, base.titleIncludes)) p.set("tin", f.titleIncludes.join(","));
-  if (!same(f.titleExcludes, base.titleExcludes)) p.set("tex", f.titleExcludes.join(","));
-  return p;
 }
 
 // Always rebuild clean objects: Apollo results carry __typename, which GraphQL rejects in inputs.
@@ -98,6 +67,7 @@ export function toGraphqlFilter(f: FeedFilters): JobFilter {
     startupMaxBoardSize: f.startup && f.startupMax ? f.startupMax : undefined,
     titleIncludes: f.titleIncludes.length ? f.titleIncludes : undefined,
     titleExcludes: f.titleExcludes.length ? f.titleExcludes : undefined,
+    regions: f.regions.length ? f.regions : undefined,
   };
 }
 
@@ -111,17 +81,18 @@ export function filtersToBoardInput(f: FeedFilters): BoardFilterInput {
     startupMaxBoardSize: f.startup ? f.startupMax : null,
     titleIncludes: f.titleIncludes,
     titleExcludes: f.titleExcludes,
+    regions: f.regions,
   };
 }
 
 /** The filter in plain words, so a board's name never has to explain it. */
-export function describeFilter(f: FeedFilters): string {
+export function describeFilter(f: FeedFilters, regionNames: Record<string, string> = {}): string {
   const parts: string[] = [];
+  if (f.regions.length) parts.push(`Regions: ${f.regions.map((c) => regionNames[c] ?? c).join(", ")}`);
   if (f.q) parts.push(`Search "${f.q}"`);
   if (f.stack.length) parts.push(`Stack: ${f.stack.join(", ")}`);
   if (f.remote.length) {
-    const labels = f.remote.map((r) => REMOTE_OPTIONS.find((o) => o.value === r)?.label ?? r);
-    parts.push(labels.join(" or "));
+    parts.push(f.remote.map((r) => REMOTE_OPTIONS.find((o) => o.value === r)?.label ?? r).join(" or "));
   }
   if (f.startup) parts.push("Startups only");
   if (f.titleIncludes.length) parts.push(`Title has: ${f.titleIncludes.join(", ")}`);

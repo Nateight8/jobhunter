@@ -1,4 +1,4 @@
-import { ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { arrayOverlaps, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { companies, jobs } from "@workspace/db";
 
 export type JobFilterInput = {
@@ -11,6 +11,7 @@ export type JobFilterInput = {
   includeClosed?: boolean | null;
   titleIncludes?: string[] | null;
   titleExcludes?: string[] | null;
+  regions?: string[] | null;
 };
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -49,6 +50,9 @@ export function buildConditions(f: JobFilterInput): SQL[] {
   for (const k of clean(f.titleExcludes)) {
     conds.push(sql`${jobs.title} !~* ${wholeWord(k)}`);
   }
+
+  const regions = clean(f.regions);
+  if (regions.length) conds.push(arrayOverlaps(jobs.regions, regions)); // any of the picked regions
 
   if (f.startupOnly) {
     // Only jobs from a known ATS board can be size-checked; others are excluded.

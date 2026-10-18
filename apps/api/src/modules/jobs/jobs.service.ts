@@ -107,3 +107,15 @@ export async function countJobsCapped(db: Db, filter: JobFilterInput, cap = 500)
     .limit(cap + 1);
   return { value: Math.min(rows.length, cap), capped: rows.length > cap };
 }
+
+/** Regions that at least one open job is placed in, most common first. */
+export async function listRegionOptions(db: Db) {
+  const res = await db.execute<{ code: string; count: number }>(sql`
+    select r as code, count(*)::int as count
+    from jobs, unnest(regions) as r
+    where closed_at is null
+    group by r
+    order by count desc, r
+  `);
+  return res.rows;
+}
