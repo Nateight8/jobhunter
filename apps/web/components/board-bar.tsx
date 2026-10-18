@@ -40,28 +40,31 @@ export function BoardBar() {
   }
 
   return (
-    <nav className="flex items-center gap-2 overflow-x-auto pb-1">
-      <Link href="/" className={`${tab} ${active ? "hover:bg-muted" : "bg-muted font-medium"}`}>
-        All
-      </Link>
-      {boards.map((b) => (
-        <Link
-          key={b.id}
-          href={`/?board=${b.id}`}
-          className={`${tab} ${b.id === active?.id ? "bg-muted font-medium" : "hover:bg-muted"}`}
-        >
-          {b.name}
-          <span className="text-muted-foreground">{countOf(b.id)}</span>
+    <div className="flex items-center gap-2">
+      {/* tabs scroll sideways; the + menu sits outside so its dropdown is never clipped */}
+      <nav className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+        <Link href="/" className={`${tab} ${active ? "hover:bg-muted" : "bg-muted font-medium"}`}>
+          All
         </Link>
-      ))}
-      {!boards.some((b) => b.kind === "recommended") && (
-        <Link href="/boards" className={`${tab} text-muted-foreground hover:bg-muted`}>
-          Get recommendations
-        </Link>
-      )}
-      <details ref={menu} className="relative">
+        {boards.map((b) => (
+          <Link
+            key={b.id}
+            href={`/?board=${b.id}`}
+            className={`${tab} ${b.id === active?.id ? "bg-muted font-medium" : "hover:bg-muted"}`}
+          >
+            {b.name}
+            <span className="text-muted-foreground">{countOf(b.id)}</span>
+          </Link>
+        ))}
+        {!boards.some((b) => b.kind === "recommended") && (
+          <Link href="/boards" className={`${tab} text-muted-foreground hover:bg-muted`}>
+            Get recommendations
+          </Link>
+        )}
+      </nav>
+      <details ref={menu} className="relative shrink-0">
         <summary className={`${tab} cursor-pointer list-none hover:bg-muted`}>+</summary>
-        <div className="absolute z-10 mt-1 w-64 space-y-1 rounded-md border bg-background p-2 shadow">
+        <div className="absolute right-0 z-20 mt-1 w-64 space-y-1 rounded-md border bg-background p-2 shadow">
           <button
             type="button"
             className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
@@ -86,6 +89,6 @@ export function BoardBar() {
           </Link>
         </div>
       </details>
-    </nav>
+    </div>
   );
 }

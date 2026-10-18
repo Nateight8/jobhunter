@@ -37,6 +37,7 @@ export const JOB_QUERY = graphql(`
       url
       applyUrl
       firstSeenAt
+      closedAt
       description
     }
   }

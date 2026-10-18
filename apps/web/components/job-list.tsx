@@ -18,8 +18,8 @@ function bucket(iso: string): string {
   return "Earlier";
 }
 
-export function JobList({ selectedId }: { selectedId: string | null }) {
-  const { sp, filters } = useFeedFilters();
+export function JobList() {
+  const { filters } = useFeedFilters();
   const filter = toGraphqlFilter(filters);
   const [isPending, startTransition] = useTransition();
 
@@ -31,12 +31,6 @@ export function JobList({ selectedId }: { selectedId: string | null }) {
     variables: { filter, first: 25 },
   });
   const { edges, pageInfo, totalCount } = data.jobs;
-
-  const hrefFor = (id: string) => {
-    const p = new URLSearchParams(sp.toString());
-    p.set("job", id);
-    return `?${p.toString()}`;
-  };
 
   let lastBucket = "";
   return (
@@ -55,14 +49,7 @@ export function JobList({ selectedId }: { selectedId: string | null }) {
                   <span className="h-px flex-1 bg-border" />
                 </div>
               )}
-              <Link
-                href={hrefFor(node.id)}
-                replace
-                scroll={false}
-                className={`block rounded-md border p-3 text-sm hover:bg-muted ${
-                  node.id === selectedId ? "bg-muted" : ""
-                }`}
-              >
+              <Link href={`/${node.id}`} className="block rounded-md border p-3 text-sm hover:bg-muted">
                 <div className="font-medium">{node.title}</div>
                 <div className="text-muted-foreground">
                   {node.companyName}

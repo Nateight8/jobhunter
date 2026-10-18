@@ -1,16 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSuspenseQuery } from "@apollo/client/react";
 import { JOB_QUERY } from "../lib/queries";
 import { sanitizeHtml } from "../lib/sanitize";
 
-export function JobDetail({ id }: { id: string | null }) {
-  if (!id) return <p className="text-sm text-muted-foreground">Select a job to see details.</p>;
-  return <LoadedJob id={id} />;
+export function BackButton() {
+  const router = useRouter();
+  return (
+    <button
+      type="button"
+      className="text-sm underline"
+      // back keeps the list's filters and scroll position; fall back to the feed for a fresh tab
+      onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
+    >
+      ← Back to jobs
+    </button>
+  );
 }
 
-function LoadedJob({ id }: { id: string }) {
+export function JobDetail({ id }: { id: string }) {
   const { data } = useSuspenseQuery(JOB_QUERY, { variables: { id } });
   const job = data.job;
 
@@ -26,9 +36,9 @@ function LoadedJob({ id }: { id: string }) {
   if (!job) return <p className="text-sm text-muted-foreground">Job not found.</p>;
 
   return (
-    <article className="space-y-3">
-      <header className="space-y-1">
-        <h2 className="text-xl font-semibold">{job.title}</h2>
+    <article className="space-y-4">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold">{job.title}</h1>
         <p className="text-sm text-muted-foreground">
           {job.companyName}
           {job.location ? ` · ${job.location}` : ""} · {job.remoteType.toLowerCase()}
@@ -39,11 +49,17 @@ function LoadedJob({ id }: { id: string }) {
             {job.source}
           </a>
         </p>
+        {job.closedAt && (
+          <p className="rounded-md border p-3 text-sm">
+            This listing is no longer on the source board (closed{" "}
+            {new Date(job.closedAt).toISOString().slice(0, 10)}). It may have been filled.
+          </p>
+        )}
         <a
           href={job.applyUrl ?? job.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
+          className="inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
         >
           Apply
         </a>
