@@ -1,0 +1,5 @@
+{
+  "name": "DevOps",
+  "description": "Infrastructure, CI/CD and cloud platform roles",
+  "filter": { "stack": ["devops", "sre", "kubernetes", "docker", "terraform", "ansible", "ci/cd"] }
+}

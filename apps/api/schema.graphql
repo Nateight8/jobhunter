@@ -1,3 +1,52 @@
+type Board {
+  """
+  Computed on request, so ask for it in a separate query from the board list.
+  """
+  count: BoardCount!
+  filter: BoardFilter!
+  id: ID!
+
+  """recommended, or null for your own boards"""
+  kind: String
+  name: String!
+  position: Int!
+}
+
+"""Number of matching jobs, capped (value 500 + capped true means 500+)."""
+type BoardCount {
+  capped: Boolean!
+  value: Int!
+}
+
+type BoardFilter {
+  remoteTypes: [RemoteType!]
+  search: String
+  sources: [String!]
+  stack: [String!]
+  startupMaxBoardSize: Int
+  startupOnly: Boolean
+  titleExcludes: [String!]
+  titleIncludes: [String!]
+}
+
+input BoardFilterInput {
+  remoteTypes: [RemoteType!]
+  search: String
+  sources: [String!]
+  stack: [String!]
+  startupMaxBoardSize: Int
+  startupOnly: Boolean
+  titleExcludes: [String!]
+  titleIncludes: [String!]
+}
+
+type BoardPreset {
+  description: String!
+  filter: BoardFilter!
+  id: ID!
+  name: String!
+}
+
 """The full reviewed profile. Every list replaces what is stored."""
 input ConfirmProfileInput {
   education: [EducationInput!]!
@@ -168,13 +217,23 @@ input JobFilter {
 
   """Only jobs from ATS boards under the size limit"""
   startupOnly: Boolean
+
+  """Title must contain none of these words"""
+  titleExcludes: [String!]
+
+  """Title must contain any of these words"""
+  titleIncludes: [String!]
 }
 
 type Mutation {
   """
-  Saves the reviewed profile in one transaction, computes years of experience from the experience dates and marks the draft confirmed. Requires name, email, phone, country and at least one authorized region.
+  Saves the reviewed profile in one transaction, computes years of experience from the experience dates and marks the draft confirmed. Requires name, email, phone, country and at least one authorized region. The first confirmation also creates the Recommended board.
   """
   confirmProfile(draftId: ID, input: ConfirmProfileInput!): Profile!
+  createBoard(filter: BoardFilterInput, name: String!): Board!
+
+  """Returns the remaining boards."""
+  deleteBoard(id: ID!): [Board!]!
 
   """
   Deletes a document. If it was the default, the newest one of its kind takes over.
@@ -186,6 +245,14 @@ type Mutation {
   Reads a stored CV with Gemini and saves the result as a draft (see Profile.draft). Takes a few seconds. A failed extraction leaves a draft with status failed and an error message.
   """
   extractProfile(documentId: ID!): Profile!
+
+  """Takes every board id in the new order."""
+  reorderBoards(ids: [ID!]!): [Board!]!
+
+  """
+  Regenerates the Recommended board from the CV, or creates it if it is missing.
+  """
+  resetRecommendedBoard: Board!
 
   """Replaces the whole education list."""
   saveEducation(items: [EducationInput!]!): Profile!
@@ -204,6 +271,11 @@ type Mutation {
 
   """Makes this document the default for its kind."""
   setDefaultDocument(id: ID!): Profile!
+
+  """
+  Renames and/or replaces the filter. Omitted arguments stay as they are.
+  """
+  updateBoard(filter: BoardFilterInput, id: ID!, name: String): Board!
 }
 
 type PageInfo {
@@ -304,6 +376,12 @@ input ProjectInput {
 }
 
 type Query {
+  boardPresets: [BoardPreset!]!
+
+  """
+  The profile's boards in tab order. All is not a board: it is the feed with no board.
+  """
+  boards: [Board!]!
   job(id: ID!): Job
   jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection!
 

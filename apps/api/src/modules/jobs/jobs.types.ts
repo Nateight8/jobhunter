@@ -21,6 +21,8 @@ export const JobFilter = builder.inputType("JobFilter", {
     startupOnly: t.boolean({ description: "Only jobs from ATS boards under the size limit" }),
     startupMaxBoardSize: t.int({ description: "Default 50 open jobs" }),
     includeClosed: t.boolean(),
+    titleIncludes: t.stringList({ description: "Title must contain any of these words" }),
+    titleExcludes: t.stringList({ description: "Title must contain none of these words" }),
   }),
 });
 

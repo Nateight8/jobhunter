@@ -1,0 +1,5 @@
+{
+  "name": "Frontend",
+  "description": "Frontend and UI engineering roles",
+  "filter": { "stack": ["frontend", "front-end", "react", "vue", "angular", "svelte"] }
+}

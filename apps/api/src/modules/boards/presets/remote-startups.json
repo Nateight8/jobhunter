@@ -1,0 +1,5 @@
+{
+  "name": "Remote startups",
+  "description": "Remote roles at companies with small job boards",
+  "filter": { "remoteTypes": ["remote"], "startupOnly": true }
+}

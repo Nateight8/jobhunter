@@ -4,3 +4,4 @@ export * from "./scrape-runs";
 export * from "./profile";
 export * from "./documents";
 export * from "./profile-drafts";
+export * from "./boards";

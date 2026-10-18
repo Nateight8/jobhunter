@@ -1,0 +1,5 @@
+{
+  "name": "Internships",
+  "description": "Internships and entry-level programmes (matches the job title)",
+  "filter": { "titleIncludes": ["intern", "internship", "trainee", "apprentice"] }
+}

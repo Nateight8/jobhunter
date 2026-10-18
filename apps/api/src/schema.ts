@@ -4,5 +4,6 @@ import { builder } from "./builder";
 import "./modules/jobs";
 import "./modules/profile";
 import "./modules/documents";
+import "./modules/boards";
 
 export const schema = builder.toSchema();

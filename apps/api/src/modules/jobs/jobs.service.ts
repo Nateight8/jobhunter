@@ -96,3 +96,14 @@ export async function getJobDescription(db: Db, id: string): Promise<string | nu
   const [row] = await db.select({ d: jobs.description }).from(jobs).where(eq(jobs.id, id));
   return row?.d ?? null;
 }
+
+/** Counts matching jobs, stopping at cap + 1 so many boards stay cheap to count. */
+export async function countJobsCapped(db: Db, filter: JobFilterInput, cap = 500) {
+  const rows = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .leftJoin(companies, boardJoin)
+    .where(and(...buildConditions(filter)))
+    .limit(cap + 1);
+  return { value: Math.min(rows.length, cap), capped: rows.length > cap };
+}

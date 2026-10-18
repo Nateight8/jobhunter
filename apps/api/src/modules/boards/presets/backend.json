@@ -1,0 +1,5 @@
+{
+  "name": "Backend",
+  "description": "Backend and API engineering roles",
+  "filter": { "stack": ["backend", "back-end", "node.js", "django", "rails", "spring", "golang"] }
+}
