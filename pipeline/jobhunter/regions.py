@@ -13,7 +13,10 @@ _WORLDWIDE = re.compile(
     r"\b(worldwide|world-wide|globally|global|work from anywhere|anywhere)\b(?!\s+in\s+(?!the\s+world|world))",
     re.I,
 )
-_SPLIT = re.compile(r"\s*(?:[;|/•]|,|\(|\)|\s[-–—]+\s|\s+(?:or|and)\s+|\s&\s)\s*", re.I)
+# Separate locations: "Berlin, DE; Toronto, ON", "Remote - US", "Dublin or London"
+_LOC_SPLIT = re.compile(r"\s*(?:[;|/•]|\(|\)|\s[-–—]+\s|\s+(?:or|and)\s+|\s&\s)\s*", re.I)
+# "US-Remote", "CA-Toronto": a two-letter country prefix
+_PREFIX = re.compile(r"^([A-Z]{2})-\S")
 _NOISE = re.compile(
     r"\b(remote|hybrid|on-?site|from|based|in|the|only|within|across|anywhere|time\s?zones?|tz|"
     r"work|working|eligible|candidates?|located|location|office|hq|headquarters)\b",
@@ -56,36 +59,64 @@ def region_name(code: str) -> str:
     return r["name"] if r else code
 
 
+def _classify_location(rules: _Rules, loc: str) -> set[str]:
+    """One location, e.g. 'Cambridge, MA'. Explicit names beat cities; abbreviations are checked last."""
+    strong: set[str] = set()  # country, region, state and province names, country prefixes
+    cities: set[str] = set()
+    abbrs: list[str] = []
+
+    for i, raw in enumerate(loc.split(",")):
+        tok = raw.strip(" .")
+        if not tok:
+            continue
+        if i > 0 and len(tok) == 2 and tok.isupper():
+            abbrs.append("GB" if tok == "UK" else tok)
+            continue
+        m = _PREFIX.match(tok)
+        if m:
+            code = "GB" if m.group(1) == "UK" else m.group(1)
+            if code in rules.regions:
+                strong.add(code)
+            continue
+        cleaned = _norm(re.sub(r"\s+", " ", _NOISE.sub(" ", tok)))
+        if not cleaned:
+            continue
+        if cleaned in rules.cities:
+            cities.add(rules.cities[cleaned])
+        code = (
+            rules.alias.get(cleaned)
+            or ("US" if cleaned in rules.us_states else None)
+            or ("CA" if cleaned in rules.ca_provinces else None)
+        )
+        if code:
+            strong.add(code)
+
+    for tok in abbrs:
+        if tok in strong or tok in cities:
+            continue  # "Berlin, DE" / "Amsterdam, NL": the abbreviation agrees with what we already have
+        if tok in rules.us_abbr:  # "Cambridge, MA": a state beats a same-named foreign city
+            strong.add("US")
+            cities = {c for c in cities if c == "US"}
+        elif tok in rules.ca_abbr:
+            strong.add("CA")
+            cities = {c for c in cities if c == "CA"}
+        elif tok in rules.regions:
+            strong.add(tok)
+
+    return strong or cities
+
+
 def classify_text(text: str | None) -> set[str]:
-    rules = _load()
     codes: set[str] = set()
     if not text:
         return codes
     if _WORLDWIDE.search(text):
         codes.add("WORLDWIDE")
-    for i, raw in enumerate(_SPLIT.split(text)):
-        tok = raw.strip(" .")
-        if not tok:
-            continue
-        # "Denver, CO" / "Toronto, ON": a trailing two-letter code is a state or province
-        if i > 0 and len(tok) == 2 and tok.isupper():
-            if tok in rules.us_abbr:
-                codes.add("US")
-                continue
-            if tok in rules.ca_abbr:
-                codes.add("CA")
-                continue
-        cleaned = _norm(re.sub(r"\s+", " ", _NOISE.sub(" ", tok)))
-        if not cleaned:
-            continue
-        code = (
-            rules.alias.get(cleaned)
-            or rules.cities.get(cleaned)
-            or ("US" if cleaned in rules.us_states else None)
-            or ("CA" if cleaned in rules.ca_provinces else None)
-        )
-        if code:
-            codes.add(code)
+    rules = _load()
+    for loc in _LOC_SPLIT.split(text):
+        loc = loc.strip()
+        if loc:
+            codes |= _classify_location(rules, loc)
     return codes
 
 

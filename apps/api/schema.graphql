@@ -1,3 +1,54 @@
+"""
+A reusable answer to a question that recurs in application forms. Empty means never guessed.
+"""
+type Answer {
+  answer: String
+  answerType: AnswerType!
+  id: ID!
+
+  """Set for starter questions, null for your own"""
+  key: String
+  question: String!
+}
+
+input AnswerInput {
+  answer: String
+  answerType: AnswerType!
+  key: String
+  question: String!
+}
+
+enum AnswerType {
+  TEXT
+  YES_NO
+}
+
+"""
+The profile's own state for one job. Personal data: it never touches the public jobs table.
+"""
+type Application {
+  appliedAt: String
+  id: ID!
+  job: Job!
+  notes: String
+  status: ApplicationStatus!
+  updatedAt: String!
+}
+
+type ApplicationCount {
+  count: Int!
+  status: ApplicationStatus!
+}
+
+enum ApplicationStatus {
+  APPLIED
+  HIDDEN
+  INTERVIEWING
+  OFFER
+  REJECTED
+  SAVED
+}
+
 type Board {
   """
   Computed on request, so ask for it in a separate query from the board list.
@@ -173,6 +224,11 @@ input ExperienceInput {
 }
 
 type Job {
+  """
+  Full application record. One query per job, so request it on a single job, not in lists.
+  """
+  application: Application
+  applicationStatus: ApplicationStatus
   applyUrl: String
   boardSize: Int
   closedAt: String
@@ -205,6 +261,9 @@ type JobEdge {
 
 input JobFilter {
   includeClosed: Boolean
+
+  """Also show jobs you have applied to or hidden"""
+  includeTracked: Boolean
 
   """
   Region codes (see regionOptions). Any match; jobs with no region are left out.
@@ -253,6 +312,11 @@ type Mutation {
   """
   extractProfile(documentId: ID!): Profile!
 
+  """
+  Forgets the profile's state for a job (unsave, restore, undo). Returns the job.
+  """
+  removeApplication(jobId: ID!): Job!
+
   """Takes every board id in the new order."""
   reorderBoards(ids: [ID!]!): [Board!]!
 
@@ -260,6 +324,11 @@ type Mutation {
   Regenerates the Recommended board from the CV, or creates it if it is missing.
   """
   resetRecommendedBoard: Board!
+
+  """
+  Replaces the whole bank in one transaction. Starters you leave out come back empty.
+  """
+  saveAnswers(items: [AnswerInput!]!): [Answer!]!
 
   """Replaces the whole education list."""
   saveEducation(items: [EducationInput!]!): Profile!
@@ -275,6 +344,12 @@ type Mutation {
 
   """Replaces the whole skill list. Duplicate names are dropped."""
   saveSkills(items: [SkillInput!]!): Profile!
+  setApplicationNotes(jobId: ID!, notes: String): Application!
+
+  """
+  Saves, hides or records progress on a job. Creates the record if needed. Moving to applied (or later) stamps the applied date once.
+  """
+  setApplicationStatus(jobId: ID!, notes: String, status: ApplicationStatus!): Application!
 
   """Makes this document the default for its kind."""
   setDefaultDocument(id: ID!): Profile!
@@ -383,6 +458,12 @@ input ProjectInput {
 }
 
 type Query {
+  """The answers bank. Starter questions are created on first read."""
+  answers: [Answer!]!
+  applicationCounts: [ApplicationCount!]!
+
+  """Newest activity first. Omit status for all."""
+  applications(status: ApplicationStatus): [Application!]!
   boardPresets: [BoardPreset!]!
 
   """

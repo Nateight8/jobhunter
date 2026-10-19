@@ -13,6 +13,9 @@ export function Feed() {
       <header className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">jobhunter</h1>
         <nav className="flex gap-4 text-sm">
+          <Link href="/applications" className="underline">
+            Applications
+          </Link>
           <Link href="/boards" className="underline">
             Boards
           </Link>

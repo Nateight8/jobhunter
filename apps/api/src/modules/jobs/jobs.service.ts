@@ -1,5 +1,5 @@
 import { and, count, desc, eq, sql } from "drizzle-orm";
-import { companies, jobs } from "@workspace/db";
+import { applications, companies, jobs } from "@workspace/db";
 import type { Db } from "../../lib/db";
 import { clampFirst, decodeCursor, encodeCursor, isUuid } from "../../lib/pagination";
 import { buildConditions, type JobFilterInput } from "./jobs.filters";
@@ -19,11 +19,12 @@ export type JobRow = {
   firstSeenAt: Date;
   closedAt: Date | null;
   boardSize: number | null; // open jobs on the company's ATS board (startup-size signal)
+  applicationStatus: string | null; // the profile's own state for this job, if any
   cursorTs: string; // full-precision timestamp for keyset pagination
   description?: string | null; // only loaded by getJob, never in lists
 };
 
-const columns = {
+export const jobColumns = {
   id: jobs.id,
   source: jobs.source,
   url: jobs.url,
@@ -38,17 +39,22 @@ const columns = {
   firstSeenAt: jobs.firstSeenAt,
   closedAt: jobs.closedAt,
   boardSize: companies.openJobs,
+  applicationStatus: applications.status,
   cursorTs: sql<string>`${jobs.firstSeenAt}::text`,
 };
 
 // jobs.company_id isn't resolved yet, so join to the board by (source, slug).
-const boardJoin = and(
+export const boardJoin = and(
   eq(companies.atsType, jobs.source),
   eq(companies.atsSlug, sql`split_part(${jobs.sourceId}, ':', 1)`),
 );
 
+const appJoin = (profileId: string) =>
+  and(eq(applications.jobId, jobs.id), eq(applications.profileId, profileId));
+
 export async function listJobs(
   db: Db,
+  profileId: string,
   args: { filter: JobFilterInput; first: number; after?: string | null },
 ) {
   const first = clampFirst(args.first);
@@ -62,13 +68,19 @@ export async function listJobs(
 
   const [rows, totals] = await Promise.all([
     db
-      .select(columns)
+      .select(jobColumns)
       .from(jobs)
       .leftJoin(companies, boardJoin)
+      .leftJoin(applications, appJoin(profileId))
       .where(and(...pageConds))
       .orderBy(desc(jobs.firstSeenAt), desc(jobs.id))
       .limit(first + 1),
-    db.select({ n: count() }).from(jobs).leftJoin(companies, boardJoin).where(and(...conds)),
+    db
+      .select({ n: count() })
+      .from(jobs)
+      .leftJoin(companies, boardJoin)
+      .leftJoin(applications, appJoin(profileId))
+      .where(and(...conds)),
   ]);
 
   const edges = rows
@@ -81,12 +93,13 @@ export async function listJobs(
   };
 }
 
-export async function getJob(db: Db, id: string): Promise<JobRow | null> {
+export async function getJob(db: Db, id: string, profileId: string): Promise<JobRow | null> {
   if (!isUuid(id)) return null;
   const rows = await db
-    .select({ ...columns, description: jobs.description })
+    .select({ ...jobColumns, description: jobs.description })
     .from(jobs)
     .leftJoin(companies, boardJoin)
+    .leftJoin(applications, appJoin(profileId))
     .where(eq(jobs.id, id))
     .limit(1);
   return rows[0] ?? null;
@@ -98,11 +111,12 @@ export async function getJobDescription(db: Db, id: string): Promise<string | nu
 }
 
 /** Counts matching jobs, stopping at cap + 1 so many boards stay cheap to count. */
-export async function countJobsCapped(db: Db, filter: JobFilterInput, cap = 500) {
+export async function countJobsCapped(db: Db, profileId: string, filter: JobFilterInput, cap = 500) {
   const rows = await db
     .select({ id: jobs.id })
     .from(jobs)
     .leftJoin(companies, boardJoin)
+    .leftJoin(applications, appJoin(profileId))
     .where(and(...buildConditions(filter)))
     .limit(cap + 1);
   return { value: Math.min(rows.length, cap), capped: rows.length > cap };

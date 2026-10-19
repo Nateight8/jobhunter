@@ -1,5 +1,5 @@
 import { arrayOverlaps, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
-import { companies, jobs } from "@workspace/db";
+import { applications, companies, jobs } from "@workspace/db";
 
 export type JobFilterInput = {
   search?: string | null;
@@ -12,6 +12,7 @@ export type JobFilterInput = {
   titleIncludes?: string[] | null;
   titleExcludes?: string[] | null;
   regions?: string[] | null;
+  includeTracked?: boolean | null;
 };
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -25,6 +26,10 @@ const clean = (a?: string[] | null) => (a ?? []).map((s) => s.trim()).filter(Boo
 export function buildConditions(f: JobFilterInput): SQL[] {
   const conds: SQL[] = [];
   if (!f.includeClosed) conds.push(isNull(jobs.closedAt));
+  // Jobs you've applied to or hidden stay out of the feed unless asked for. Saved jobs stay in.
+  if (!f.includeTracked) {
+    conds.push(sql`(${applications.status} is null or ${applications.status} = 'saved')`);
+  }
   if (f.remoteTypes?.length) conds.push(inArray(jobs.remoteType, f.remoteTypes));
   if (f.sources?.length) conds.push(inArray(jobs.source, f.sources));
 

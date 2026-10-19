@@ -15,6 +15,7 @@ export const JOBS_QUERY = graphql(`
           source
           boardSize
           firstSeenAt
+          applicationStatus
         }
       }
       pageInfo {
@@ -39,6 +40,13 @@ export const JOB_QUERY = graphql(`
       firstSeenAt
       closedAt
       description
+      applicationStatus
+      application {
+        id
+        status
+        appliedAt
+        notes
+      }
     }
   }
 `);

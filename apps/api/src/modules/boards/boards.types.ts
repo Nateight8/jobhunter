@@ -58,7 +58,7 @@ BoardRef.implement({
     count: t.field({
       type: BoardCountRef,
       description: "Computed on request, so ask for it in a separate query from the board list.",
-      resolve: (b, _args, ctx) => countJobsCapped(ctx.db, toJobFilter(parseFilter(b.filter))),
+      resolve: (b, _args, ctx) => countJobsCapped(ctx.db, b.profileId, toJobFilter(parseFilter(b.filter))),
     }),
   }),
 });

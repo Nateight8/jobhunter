@@ -1,6 +1,7 @@
 import { GraphQLError } from "graphql";
 import { builder } from "../../builder";
 import { InvalidCursorError } from "../../lib/pagination";
+import { getOrCreateProfile } from "../profile/profile.service";
 import { JobConnection, JobFilter, JobRef } from "./jobs.types";
 import { getJob, listJobs } from "./jobs.service";
 
@@ -14,8 +15,9 @@ builder.queryFields((t) => ({
       after: t.arg.string(),
     },
     resolve: async (_root, args, ctx) => {
+      const profile = await getOrCreateProfile(ctx.db);
       try {
-        return await listJobs(ctx.db, {
+        return await listJobs(ctx.db, profile.id, {
           filter: args.filter ?? {},
           first: args.first ?? 25,
           after: args.after,
@@ -30,6 +32,9 @@ builder.queryFields((t) => ({
     type: JobRef,
     nullable: true,
     args: { id: t.arg.id({ required: true }) },
-    resolve: (_root, args, ctx) => getJob(ctx.db, String(args.id)),
+    resolve: async (_root, args, ctx) => {
+      const profile = await getOrCreateProfile(ctx.db);
+      return getJob(ctx.db, String(args.id), profile.id);
+    },
   }),
 }));

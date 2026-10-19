@@ -7,9 +7,9 @@
     "AFRICA": { "name": "Africa", "aliases": ["africa"] },
     "NORTH_AMERICA": { "name": "North America", "aliases": ["north america"] },
     "LATAM": { "name": "Latin America", "aliases": ["latam", "latin america", "south america"] },
-    "APAC": { "name": "Asia-Pacific", "aliases": ["apac", "asia pacific", "asia-pacific", "asia"] },
+    "APAC": { "name": "Asia-Pacific", "aliases": ["apac", "apj", "asia pacific", "asia-pacific", "asia"] },
     "MIDDLE_EAST": { "name": "Middle East", "aliases": ["middle east", "mena"] },
-    "AMERICAS": { "name": "Americas", "aliases": ["americas"] },
+    "AMERICAS": { "name": "Americas", "aliases": ["americas", "amer"] },
 
     "US": { "name": "United States", "aliases": ["united states", "united states of america", "usa", "u.s.", "u.s.a.", "us", "america"] },
     "CA": { "name": "Canada", "aliases": ["canada"] },
@@ -93,7 +93,8 @@
   "ca_province_names": ["ontario", "quebec", "british columbia", "alberta", "manitoba", "saskatchewan", "nova scotia", "new brunswick", "newfoundland and labrador", "prince edward island"],
   "ca_province_abbr": ["ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "NL", "PE"],
   "cities": {
-    "london": "GB", "manchester": "GB", "edinburgh": "GB", "bristol": "GB", "cambridge": "GB",
+    "espoo": "FI", "cdmx": "MX", "zürich": "CH", "sf": "US", "south san francisco": "US",
+    "london": "GB", "manchester": "GB", "edinburgh": "GB", "bristol": "GB",
     "dublin": "IE", "berlin": "DE", "munich": "DE", "hamburg": "DE", "frankfurt": "DE",
     "paris": "FR", "amsterdam": "NL", "madrid": "ES", "barcelona": "ES", "lisbon": "PT", "porto": "PT",
     "rome": "IT", "milan": "IT", "zurich": "CH", "geneva": "CH", "vienna": "AT", "stockholm": "SE",

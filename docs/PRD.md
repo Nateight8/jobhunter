@@ -225,3 +225,12 @@ Personal state lives in separate tables keyed by `job_id`, never on `jobs`, whic
 - ATS score is computed deterministically, not by asking an LLM for a number.
 - Added the missing core goals: ghost filtering, eligibility and startup focus.
 - Integrations (AI, GitHub, SMTP) deferred to a later phase.
+
+## 14. Apply automation (decided)
+
+- The app never presses submit. A visible browser window on the user's machine fills the employer's form and stops; the user reviews and submits, so they know it went through.
+- Answers used by the runner, in order: the job's accepted answers, then the answers bank, then blank (left empty and highlighted). Nothing is guessed.
+- AI suggestions are only proposals. They become planned answers for a job only when the user accepts them.
+- "Authorized to work in X" is answered per job (it depends on the job's country), not in the bank.
+- Proof of submission: after the user submits, the runner captures the confirmation page and the answers used. If the page isn't recognized, the user confirms manually.
+- Order: answers bank, per-job answers and read-only view, Greenhouse runner, Lever and Ashby, then the AI assistant writing suggested answers.

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSuspenseQuery } from "@apollo/client/react";
 import { JOB_QUERY } from "../lib/queries";
 import { sanitizeHtml } from "../lib/sanitize";
+import { ApplyPanel } from "./apply-panel";
 
 export function BackButton() {
   const router = useRouter();
@@ -55,15 +56,8 @@ export function JobDetail({ id }: { id: string }) {
             {new Date(job.closedAt).toISOString().slice(0, 10)}). It may have been filled.
           </p>
         )}
-        <a
-          href={job.applyUrl ?? job.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-        >
-          Apply
-        </a>
       </header>
+      <ApplyPanel job={job} />
       <div
         className="text-sm leading-relaxed [&_a]:underline [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
         dangerouslySetInnerHTML={{ __html: html }}

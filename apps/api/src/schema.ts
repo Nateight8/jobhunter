@@ -5,5 +5,7 @@ import "./modules/jobs";
 import "./modules/profile";
 import "./modules/documents";
 import "./modules/boards";
+import "./modules/applications";
+import "./modules/answers";
 
 export const schema = builder.toSchema();

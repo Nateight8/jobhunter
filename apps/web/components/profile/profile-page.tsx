@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useApolloClient, useMutation, useSuspenseQuery } from "@apollo/client/react";
 import { uploadCv } from "../../lib/api";
@@ -11,6 +11,7 @@ import {
   PROFILE_QUERY,
 } from "../../lib/profile-queries";
 import { fromDraft, fromProfile, toInput, type FormState } from "./form-state";
+import { AnswersSection } from "./answers-section";
 import { ProfileForm } from "./profile-form";
 
 const MISSING_LABELS: Record<string, string> = {
@@ -188,6 +189,10 @@ export function ProfilePage() {
         saved={saved}
         onSave={(state) => void onSave(state)}
       />
+
+      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading answers…</p>}>
+        <AnswersSection />
+      </Suspense>
     </main>
   );
 }
