@@ -1,3 +1,11 @@
+"""
+Where a question's answer would come from. NONE means it stays blank for the user.
+"""
+type AnswerResolution {
+  source: ResolutionSource!
+  value: String
+}
+
 enum AnswerType {
   TEXT
   YES_NO
@@ -203,6 +211,30 @@ input ExperienceInput {
   title: String!
 }
 
+type FormFile {
+  key: String!
+  label: String!
+  required: Boolean!
+}
+
+type FormQuestion {
+  description: String
+  key: String!
+  kind: FormQuestionKind!
+  label: String!
+  options: [String!]!
+  required: Boolean!
+  resolution: AnswerResolution!
+}
+
+enum FormQuestionKind {
+  MULTISELECT
+  SELECT
+  TEXT
+  TEXTAREA
+  UNSUPPORTED
+}
+
 type Job {
   """
   Full application record. One query per job, so request it on a single job, not in lists.
@@ -272,6 +304,23 @@ input JobFilter {
 }
 
 """
+A posting's application form, fetched on demand. Public data plus how each answer would be filled.
+"""
+type JobForm {
+  fetchedAt: String
+  files: [FormFile!]!
+
+  """
+  Optional demographic or EEOC questions exist. They are never filled automatically.
+  """
+  hasSurvey: Boolean!
+  id: ID!
+  questions: [FormQuestion!]!
+  reason: String
+  supported: Boolean!
+}
+
+"""
 Something the user approved to be reused when applying. Starts empty and only grows with the user's approval.
 """
 type MemoryEntry {
@@ -284,6 +333,8 @@ type MemoryEntry {
 }
 
 type Mutation {
+  clearJobAnswer(jobId: ID!, key: String!): JobForm!
+
   """
   Saves the reviewed profile in one transaction, computes years of experience from the experience dates and marks the draft confirmed. Requires name, email, phone, country and at least one authorized region. The first confirmation also creates the Recommended board.
   """
@@ -325,6 +376,11 @@ type Mutation {
 
   """Replaces the whole experience list; order = array order."""
   saveExperiences(items: [ExperienceInput!]!): Profile!
+
+  """
+  Saves your answer to one question on one job (used before memory). With remember, it is also added to memory.
+  """
+  saveJobAnswer(answer: String!, jobId: ID!, key: String!, remember: Boolean): JobForm!
 
   """
   Adds an entry, or edits the one with this id. The same question again updates the existing entry.
@@ -464,6 +520,11 @@ type Query {
   """
   boards: [Board!]!
   job(id: ID!): Job
+
+  """
+  The application form for a job. Makes a network call on first use, then caches for 12 hours.
+  """
+  jobForm(jobId: ID!, refresh: Boolean): JobForm!
   jobs(after: String, filter: JobFilter, first: Int = 25): JobConnection!
 
   """Remembered answers, most recently changed first."""
@@ -488,6 +549,13 @@ enum RemoteType {
   ONSITE
   REMOTE
   UNKNOWN
+}
+
+enum ResolutionSource {
+  JOB_ANSWER
+  MEMORY
+  NONE
+  PROFILE
 }
 
 type Skill {

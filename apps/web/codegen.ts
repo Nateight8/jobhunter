@@ -9,6 +9,10 @@ const config: CodegenConfig = {
     "lib/board-queries.ts",
     "lib/application-queries.ts",
     "lib/memory-queries.ts",
+    "lib/form-queries.ts",
+    "lib/form-queries.ts",
+    "lib/form-queries.ts",
+    "lib/form-queries.ts",
   ],
   generates: {
     "./lib/gql/": {

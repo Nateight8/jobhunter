@@ -243,3 +243,35 @@ Personal state lives in separate tables keyed by `job_id`, never on `jobs`, whic
 - Matching uses normalized question text at first, and semantic matching once the AI assistant exists. When a match is doubtful the field stays blank: a wrong answer is worse than an empty one.
 - The Memory page lists every entry with its last-updated date, and lets the user edit, delete or add entries by hand.
 - Stored in the existing `answers` table, exposed as `MemoryEntry` in the API.
+
+### 14.2 Application forms and per-job answers
+
+- For Greenhouse jobs, the API fetches the posting's application form on demand (public Job Board API with `questions=true`), caches it for 12 hours, and shows it on the job page. The pipeline does not fetch it.
+- Each custom question shows where its answer would come from: the user's answer for this job, the profile (LinkedIn, GitHub, portfolio, location), memory, or nothing (left blank).
+- Per-job answers are stored in `job_answers` with a source (you, memory, suggested) and a status (accepted, suggested). Only accepted answers are used. The AI assistant will add suggested rows, and the user accepts them.
+- A remembered answer is only used for a dropdown when it exactly matches one of the options. Optional demographic and EEOC questions are never filled.
+- Other ATSs show no questions until their adapters exist.
+
+### 14.2 Application forms and per-job answers
+
+- For Greenhouse jobs, the API fetches the posting's application form on demand (public Job Board API with `questions=true`), caches it for 12 hours, and shows it on the job page. The pipeline does not fetch it.
+- Each custom question shows where its answer would come from: the user's answer for this job, the profile (LinkedIn, GitHub, portfolio, location), memory, or nothing (left blank).
+- Per-job answers are stored in `job_answers` with a source (you, memory, suggested) and a status (accepted, suggested). Only accepted answers are used. The AI assistant will add suggested rows, and the user accepts them.
+- A remembered answer is only used for a dropdown when it exactly matches one of the options. Optional demographic and EEOC questions are never filled.
+- Other ATSs show no questions until their adapters exist.
+
+### 14.2 Application forms and per-job answers
+
+- For Greenhouse jobs, the API fetches the posting's application form on demand (public Job Board API with `questions=true`), caches it for 12 hours, and shows it on the job page. The pipeline does not fetch it.
+- Each custom question shows where its answer would come from: the user's answer for this job, the profile (LinkedIn, GitHub, portfolio, location), memory, or nothing (left blank).
+- Per-job answers are stored in `job_answers` with a source (you, memory, suggested) and a status (accepted, suggested). Only accepted answers are used. The AI assistant will add suggested rows, and the user accepts them.
+- A remembered answer is only used for a dropdown when it exactly matches one of the options. Optional demographic and EEOC questions are never filled.
+- Other ATSs show no questions until their adapters exist.
+
+### 14.2 Application forms and per-job answers
+
+- For Greenhouse jobs, the API fetches the posting's application form on demand (public Job Board API with `questions=true`), caches it for 12 hours, and shows it on the job page. The pipeline does not fetch it.
+- Each custom question shows where its answer would come from: the user's answer for this job, the profile (LinkedIn, GitHub, portfolio, location), memory, or nothing (left blank).
+- Per-job answers are stored in `job_answers` with a source (you, memory, suggested) and a status (accepted, suggested). Only accepted answers are used. The AI assistant will add suggested rows, and the user accepts them.
+- A remembered answer is only used for a dropdown when it exactly matches one of the options. Optional demographic and EEOC questions are never filled.
+- Other ATSs show no questions until their adapters exist.
