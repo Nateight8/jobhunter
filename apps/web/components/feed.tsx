@@ -19,6 +19,9 @@ export function Feed() {
           <Link href="/boards" className="underline">
             Boards
           </Link>
+          <Link href="/memory" className="underline">
+            Memory
+          </Link>
           <Link href="/profile" className="underline">
             Profile
           </Link>

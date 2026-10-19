@@ -8,7 +8,7 @@ const config: CodegenConfig = {
     "lib/profile-queries.ts",
     "lib/board-queries.ts",
     "lib/application-queries.ts",
-    "lib/answer-queries.ts",
+    "lib/memory-queries.ts",
   ],
   generates: {
     "./lib/gql/": {

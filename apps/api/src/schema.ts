@@ -6,6 +6,6 @@ import "./modules/profile";
 import "./modules/documents";
 import "./modules/boards";
 import "./modules/applications";
-import "./modules/answers";
+import "./modules/memory";
 
 export const schema = builder.toSchema();

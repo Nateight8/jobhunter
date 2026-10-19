@@ -229,8 +229,17 @@ Personal state lives in separate tables keyed by `job_id`, never on `jobs`, whic
 ## 14. Apply automation (decided)
 
 - The app never presses submit. A visible browser window on the user's machine fills the employer's form and stops; the user reviews and submits, so they know it went through.
-- Answers used by the runner, in order: the job's accepted answers, then the answers bank, then blank (left empty and highlighted). Nothing is guessed.
+- Answers used by the runner, in order: the job's accepted answers, then memory, then blank (left empty and highlighted). Nothing is guessed.
 - AI suggestions are only proposals. They become planned answers for a job only when the user accepts them.
-- "Authorized to work in X" is answered per job (it depends on the job's country), not in the bank.
+- "Authorized to work in X" is answered per job (it depends on the job's country), not stored in memory.
 - Proof of submission: after the user submits, the runner captures the confirmation page and the answers used. If the page isn't recognized, the user confirms manually.
 - Order: answers bank, per-job answers and read-only view, Greenhouse runner, Lever and Ashby, then the AI assistant writing suggested answers.
+
+### 14.1 Memory
+
+- Memory starts empty. The user never has to fill it in.
+- Entries are only created with the user's approval, from two places: answers the user typed into a form (captured by the runner, then offered with "Remember these?"), and AI suggestions the user accepted for a job (with an "Add to memory?" choice).
+- Remembering is a separate choice from answering. Job-specific answers (why this company) default to not remembered; factual ones (notice period, salary, sponsorship) default to offering to remember.
+- Matching uses normalized question text at first, and semantic matching once the AI assistant exists. When a match is doubtful the field stays blank: a wrong answer is worse than an empty one.
+- The Memory page lists every entry with its last-updated date, and lets the user edit, delete or add entries by hand.
+- Stored in the existing `answers` table, exposed as `MemoryEntry` in the API.
