@@ -275,3 +275,12 @@ Personal state lives in separate tables keyed by `job_id`, never on `jobs`, whic
 - Per-job answers are stored in `job_answers` with a source (you, memory, suggested) and a status (accepted, suggested). Only accepted answers are used. The AI assistant will add suggested rows, and the user accepts them.
 - A remembered answer is only used for a dropdown when it exactly matches one of the options. Optional demographic and EEOC questions are never filled.
 - Other ATSs show no questions until their adapters exist.
+
+### 14.3 The runner (decided and built)
+
+- A separate process (`make runner`) polls the `apply_runs` table. The API only queues runs and reports status.
+- It opens a visible Chrome window with a persistent profile on the user's machine and fills the Greenhouse form: name, email, phone (flagged to check), the default CV, every custom question that resolves to an answer, and location. Anything without an answer is left blank and highlighted. Optional demographic questions, the education block and the cover letter are always left for the user.
+- It never presses Submit and never solves CAPTCHAs or emailed security codes; those are the user's to complete in the window.
+- It watches for the submission (the form disappears and a confirmation page appears), saves a screenshot of the confirmation as proof, and marks the job as applied.
+- Selectors follow the documented behavior of Greenhouse's hosted form and are expected to need adjustments; `RUNNER_INSPECT=1` logs the form controls to help.
+- Next: capture what the user typed into blank fields and offer "Remember these?".

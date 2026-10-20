@@ -8,6 +8,7 @@ import "./modules/boards";
 import "./modules/applications";
 import "./modules/memory";
 import "./modules/forms";
+import "./modules/apply";
 import "./modules/forms";
 
 export const schema = builder.toSchema();

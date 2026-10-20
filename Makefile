@@ -34,3 +34,6 @@ web:
 
 enrich:
 	cd pipeline && uv run python -m jobhunter enrich
+
+runner:
+	pnpm --filter @workspace/api runner

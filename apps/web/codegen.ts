@@ -10,6 +10,7 @@ const config: CodegenConfig = {
     "lib/application-queries.ts",
     "lib/memory-queries.ts",
     "lib/form-queries.ts",
+    "lib/apply-run-queries.ts",
     "lib/form-queries.ts",
     "lib/form-queries.ts",
     "lib/form-queries.ts",

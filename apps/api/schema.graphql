@@ -37,6 +37,38 @@ enum ApplicationStatus {
   SAVED
 }
 
+"""
+One auto-fill attempt. The runner fills the form in a visible browser; the user submits.
+"""
+type ApplyRun {
+  createdAt: String!
+  id: ID!
+  jobId: ID!
+  log: [RunLogLine!]!
+  message: String
+  outcomes: [RunOutcome!]!
+
+  """
+  Screenshot of the confirmation page, captured after the user submitted.
+  """
+  screenshotUrl: String
+  status: ApplyRunStatus!
+  updatedAt: String!
+}
+
+enum ApplyRunStatus {
+  ABANDONED
+  CLOSED
+  FAILED
+  FILLING
+
+  """Filled. Waiting for the user to review and press Submit."""
+  NEEDS_YOU
+  OPENING
+  QUEUED
+  SUBMITTED
+}
+
 type Board {
   """
   Computed on request, so ask for it in a separate query from the board list.
@@ -406,9 +438,24 @@ type Mutation {
   setDefaultDocument(id: ID!): Profile!
 
   """
+  Queues an auto-fill run for a job. The runner process (make runner) opens the form and fills it. Nothing is ever submitted for the user.
+  """
+  startApply(jobId: ID!): ApplyRun!
+
+  """
   Renames and/or replaces the filter. Omitted arguments stay as they are.
   """
   updateBoard(filter: BoardFilterInput, id: ID!, name: String): Board!
+}
+
+enum OutcomeState {
+  """Filled, but worth a look"""
+  CHECK
+  FAILED
+  FILLED
+
+  """Left blank for the user"""
+  LEFT
 }
 
 type PageInfo {
@@ -513,6 +560,9 @@ type Query {
 
   """Newest activity first. Omit status for all."""
   applications(status: ApplicationStatus): [Application!]!
+
+  """The most recent auto-fill run for a job, if any."""
+  applyRun(jobId: ID!): ApplyRun
   boardPresets: [BoardPreset!]!
 
   """
@@ -556,6 +606,19 @@ enum ResolutionSource {
   MEMORY
   NONE
   PROFILE
+}
+
+type RunLogLine {
+  at: String!
+  text: String!
+}
+
+type RunOutcome {
+  key: String!
+  label: String!
+  note: String
+  required: Boolean!
+  state: OutcomeState!
 }
 
 type Skill {
